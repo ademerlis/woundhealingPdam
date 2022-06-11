@@ -1,0 +1,48 @@
+#!/bin/bash
+#BSUB -J STARalign_WH
+#BSUB -q general
+#BSUB -P transcriptomics
+#BSUB -o /projects/scratch/transcriptomics/allysondemerlis/scripts/STARalign_WH.out
+#BSUB -e /projects/scratch/transcriptomics/allysondemerlis/scripts/STARalign_WH.err
+#BSUB -n 8
+
+#/projects/scratch/transcriptomics/allysondemerlis/scripts/STARalign_WH.job
+#purpose: align trimmed RNAseq reads against the Pocillopora damicornis genome using STAR on the Pegasus bigmem queue
+#Thanks Mike and Ben!
+
+and="/projects/scratch/transcriptomics/allysondemerlis"
+samples=${and}/sequences/trimmed_paired_sequences/samples.txt
+
+
+#loop to automate generation of scripts to direct sequence file trimming
+for SAMP in `cat ${samples}`
+do \
+
+echo '#!/bin/bash' > "${and}"/scripts/"${SAMP}"_staralign.job
+echo '#BSUB -q bigmem' >> "${and}"/scripts/"${SAMP}"_staralign.job
+echo '#BSUB -J '"${SAMP}"_staralign'' >> "${and}"/scripts/"${SAMP}"_staralign.job
+echo '#BSUB -o '"${and}"/scripts/logs/"$SAMP"staralign_pdam.out'' >> "${and}"/scripts/"${SAMP}"_staralign.job
+echo '#BSUB -e '"${and}"/scripts/logs/"$SAMP"staralign_pdam.err'' >> "${and}"/scripts/"${SAMP}"_staralign.job
+echo '#BSUB -n 8' >> "${and}"/scripts/"${SAMP}"_staralign.job
+
+#   input command to run STAR aligner
+echo ''$and'/programs/STAR-2.5.3a/bin/Linux_x86_64_static/STAR \
+--runMode alignReads \
+--quantMode TranscriptomeSAM \
+--runThreadN 16 \
+--readFilesIn '$and'/sequences/trimmed_paired_sequences/'$SAMP'_trimmed_pairedfwd.fastq.gz '$and'/sequences/trimmed_paired_sequences/'$SAMP'_trimmed_pairedrev.fastq.gz \
+--readFilesCommand gunzip -c \
+--genomeDir '$and'/sequences/Pdam_genome/STARindex \
+--sjdbGTFfeatureExon exon \
+--sjdbGTFtagExonParentTranscript Parent \
+--sjdbGTFfile  '$and'/sequences/Pdam_genome/pdam_genome.gff \
+--twopassMode Basic \
+--twopass1readsN -1 \
+--outStd Log BAM_Unsorted BAM_Quant \
+--outSAMtype BAM Unsorted \
+--outReadsUnmapped Fastx \
+--outFileNamePrefix '$and'/projects/wound_healing/STARalign_results/'$SAMP'' >> "${and}"/scripts/"${SAMP}"_staralign.job
+
+#   submit generated trimming script to job queue
+bsub < "${and}"/scripts/"${SAMP}"_staralign.job
+done

@@ -1,0 +1,26 @@
+#!/bin/bash
+#~/scripts/combiningreads.job
+#/scratch/projects/transcriptomics/allysondemerlis/scripts/combiningreads.job
+#purpose: combining forward/reverse reads for each sample into one new file
+##thank you Nick Kron!!!
+
+#BSUB -J combiningreads
+#BSUB -q general
+#BSUB -P transcriptomics
+#BSUB -o combiningreads.out
+#BSUB -e combiningreads.err
+#BSUB -n 8
+
+and="/projects/scratch/transcriptomics/allysondemerlis"
+
+ cd ${and}/sequences/zippedreads/newsamples
+ 
+ prefix="nKnowles_WoundHeatRodLangdon_"
+ ls *.txt.bz2 | sed 's/nKnowles_WoundHeatRodLangdon_\([A-Z0-9]*\)_S_.*/\1/g' | uniq > samples2.txt
+ for SAMP in `cat samples2.txt`
+ do 
+ cat `ls nKnowles_WoundHeatRodLangdon_${SAMP}_S_*_1.txt.bz2` > ${SAMP}_forward.txt.bz2
+
+  cat `ls nKnowles_WoundHeatRodLangdon_${SAMP}_S_*_2.txt.bz2` > ${SAMP}_reverse.txt.bz2
+
+  done

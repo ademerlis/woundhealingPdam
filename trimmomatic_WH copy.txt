@@ -1,0 +1,45 @@
+#!/bin/bash
+#purpose: trimming
+#Thanks Mike Connelly and Ben Young!
+
+#BSUB -J trimmomatic_WH
+#BSUB -q general
+#BSUB -P transcriptomics
+#BSUB -o /projects/scratch/transcriptomics/allysondemerlis/scripts/trimmomatic_WH%J.out
+#BSUB -e /projects/scratch/transcriptomics/allysondemerlis/scripts/trimmomatic_WH%J.err
+
+#specify variable containing sequence file prefixes and directory paths
+and="/projects/scratch/transcriptomics/allysondemerlis"
+
+#cd ${and}/sequences/zippedreads/combinedreads
+samples=${and}/sequences/zippedreads/combinedreads/samples.txt
+
+# trimming the files
+for SAMP in `cat ${samples}`
+do
+echo '#!/bin/bash' > /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+echo '#BSUB -q general' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+echo '#BSUB -J '$SAMP'' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+echo '#BSUB -o /scratch/projects/transcriptomics/allysondemerlis/scripts/'$SAMP'_error_trimming.txt' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+echo '#BSUB -e /scratch/projects/transcriptomics/allysondemerlis/scripts/'$SAMP'_output_trimming.txt' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+
+echo 'module load java/1.8.0_60' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+echo 'module load trimmomatic/0.36' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+
+echo '/share/opt/java/jdk1.8.0_60/bin/java -jar /share/apps/trimmomatic/0.36/trimmomatic-0.36.jar \
+PE \
+-phred33 \
+-trimlog /scratch/projects/transcriptomics/allysondemerlis/scripts/'${SAMP}'_trim.log \
+'${and}'/sequences/zippedreads/combinedreads/'${SAMP}'_forward.txt.bz2 '${and}'/sequences/zippedreads/combinedreads/'${SAMP}'_reverse.txt.bz2 \
+'${SAMP}'_trimmed_pairedfwd.fastq.gz '${SAMP}'_trimmed_unpairedfwd.fastq.gz '${SAMP}'_trimmed_pairedrev.fastq.gz '${SAMP}'_trimmed_unpairedrev.fastq.gz \
+ILLUMINACLIP:/share/apps/trimmomatic/0.36/adapters/TruSeq3-PE.fa:2:30:10 \
+LEADING:3 \
+TRAILING:3 \
+SLIDINGWINDOW:4:15 \
+MINLEN:80' >> /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+bsub < /scratch/projects/transcriptomics/allysondemerlis/scripts/${SAMP}_trimming.job
+done
+
+
+
+

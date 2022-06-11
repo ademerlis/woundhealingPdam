@@ -1,0 +1,26 @@
+#!/bin/bash
+#~/scripts/fastqc_wound_healing_test.job
+#/projects/scratch/transcriptomics/allysondemerlis/scripts/fastqc_wound_healing_test.job
+#purpose: quality checking of raw RNAseq reads using FASTQC on Pegasus compute node
+#Thanks Mike Connelly and Ben Young!
+
+#BSUB -J fastqc
+#BSUB -q general
+#BSUB -P transcriptomics
+#BSUB -o fastqc.out
+#BSUB -e fastqc.err
+#BSUB -n 8
+
+and="/projects/scratch/transcriptomics/allysondemerlis"
+
+cd ${and}/sequences/zippedreads/combinedreads
+for SAMP in *.txt.bz2
+
+do
+
+module load java/1.8.0_60
+${and}/programs/FastQC/fastqc \
+${and}/sequences/zippedreads/combinedreads/$SAMP \
+--outdir ${and}/projects/wound_healing/fastqc_results
+done
+

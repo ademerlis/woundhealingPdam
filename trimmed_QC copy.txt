@@ -1,0 +1,26 @@
+#!/bin/bash
+#~/scripts/trimmed_QC.job
+#/projects/scratch/transcriptomics/allysondemerlis/scripts/trimmed_QC.job
+#purpose: quality checking of trimmed sequences
+
+#BSUB -J fastqc
+#BSUB -q general
+#BSUB -P transcriptomics
+#BSUB -o fastqc.out
+#BSUB -e fastqc.err
+#BSUB -n 8
+
+and="/projects/scratch/transcriptomics/allysondemerlis"
+
+cd ${and}/scripts
+
+for SAMP in *.fastq.gz
+
+do
+
+module load java/1.8.0_60
+${and}/programs/FastQC/fastqc \
+${and}/scripts/$SAMP \
+--outdir ${and}/projects/wound_healing/QC
+done
+

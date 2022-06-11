@@ -1,0 +1,17 @@
+#code for multiqc
+#run in terminal
+
+
+conda activate
+
+pip install multiqc
+
+#navigate to the directory where you have all your fastqc results
+
+cd ~/OneDrive - University of Miami/Cnidimmunity Lab/Wound_Healing_Project/QC/FastQC/ \
+fastqc_results
+
+multiqc .
+
+#Then the program will run and give you an html and directory output
+

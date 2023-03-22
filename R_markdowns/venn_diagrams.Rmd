@@ -1,0 +1,81 @@
+---
+title: "venn_diagrams"
+author: "allyson_demerlis"
+date: "2023-03-22"
+output: html_document
+---
+# Install and load necessary packages
+```{r, install/load packages}
+library(tidyverse) 
+library(ggpubr)
+library(VennDiagram)
+```
+
+# import gene annotation files
+```{r}
+anno_h0 <- readRDS("annotated_h0.rds")
+anno_h1 <- readRDS("annotated_h1.rds")
+anno_h2 <- readRDS("annotated_h2.rds")
+anno_h4 <- readRDS("annotated_h4.rds")
+```
+
+
+# Venn Diagrams for DGEs at each hour
+```{r}
+# need to manually calculate the totals and the intersects of each interaction (0-1, 0-2, 0-4, 1-2, 1-4, 2-4)
+
+##Pairwise
+h0_h1 <- intersect(anno_h0$Row.names, anno_h1$Row.names)
+h0_h2 <- intersect(anno_h0$Row.names, anno_h2$Row.names)
+h0_h4 <- intersect(anno_h0$Row.names, anno_h4$Row.names)
+h1_h2 <- intersect(anno_h1$Row.names, anno_h2$Row.names)
+h1_h4 <- intersect(anno_h1$Row.names, anno_h4$Row.names)
+h2_h4 <- intersect(anno_h2$Row.names, anno_h4$Row.names)
+
+##Triple
+h0_h1_h2 <- intersect(h0_h1, anno_h2$Row.names)
+h0_h2_h4 <- intersect(h0_h2, anno_h4$Row.names)
+h1_h2_h4 <- intersect(h1_h2, anno_h4$Row.names)
+h0_h1_h4 <- intersect(h0_h1, anno_h4$Row.names)
+##Quadruple
+h0_h1_h2_h4 <- intersect(h0_h1, h2_h4)
+
+DGE_hour_venn <- draw.quad.venn(area1 = length(anno_h0$Row.names),
+               area2 = length(anno_h1$Row.names),
+               area3 = length(anno_h2$Row.names),
+               area4 = length(anno_h4$Row.names),
+               n12 = length(h0_h1),
+               n13 = length(h0_h2),
+               n14 = length(h0_h4),
+               n23 = length(h1_h2),
+               n24 = length(h1_h4),
+               n34 = length(h2_h4),
+               n123 = length(h0_h1_h2),
+               n124 = length(h0_h1_h4),
+               n134 = length(h0_h2_h4),
+               n234 = length(h1_h2_h4),
+               n1234 = length(h0_h1_h2_h4),
+               category = c("Hour 0", "Hour 1", "Hour 2", "Hour 4"),
+               fill = c("olivedrab3", "skyblue", "springgreen", "deepskyblue"),
+               lwd = rep(1,4),
+               cat.cex = rep(1.4, 4),
+               #cat.fontfamily = rep("Arial", 4),
+               cat.fontface = rep("plain", 4),
+               alpha = c(0.3,0.3,0.3,0.3),
+               cex = c(rep(1.4,5), 3, rep(1.4, 9)),
+               fontface = c(rep("plain", 5), "bold", rep("plain", 9)),
+               #fontfamily = c(rep("Arial", 15)),
+               label.col = c(rep("black", 5), "red", rep("black", 9)),
+               print.mode = "raw",
+               sigdigs = 2,
+               scaled = TRUE
+) 
+pdf("../results/DGE_hours_venndiagram")
+grid.draw(DGE_hour_venn) #run lines 73-74 together
+
+```
+
+
+
+
+

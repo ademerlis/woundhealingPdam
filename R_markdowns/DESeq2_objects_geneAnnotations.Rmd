@@ -94,7 +94,7 @@ metadata <- metadata %>% column_to_rownames("sample")
 
 metadata$condition <- as.factor(metadata$condition)
 
-saveRDS(metadata, file = "metadata.rds")
+#saveRDS(metadata, file = "metadata.rds")
 ```
 
 
@@ -120,7 +120,7 @@ anno_LRT<-merge(as.data.frame(resSig_LRT),Pdam_Gene_Names_Info,by='row.names',al
 anno_LRT<-na.omit(anno_LRT)
 
 # Save  object to a file
-saveRDS(ddsLRT, file = "ddsLRT.rds")
+#saveRDS(ddsLRT, file = "ddsLRT.rds")
 ```
 
 # DDS Objects for each hour (Wald tests for each hour ran individually)
@@ -156,7 +156,7 @@ length(dds_0) #19447
 dds_0<-DESeq(dds_0)
 
 # Save  object to a file
-saveRDS(dds_0, file = "dds_0.rds")
+#saveRDS(dds_0, file = "dds_0.rds")
 
 res_h0<-results(dds_0)
 summary(res_h0,alpha=0.05)
@@ -168,6 +168,8 @@ resSig_h0<-res_h0[which(res_h0$padj<0.05), ]
 #annotate results to include Gene Function
 anno_h0<-merge(as.data.frame(resSig_h0),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 anno_h0<-na.omit(anno_h0)
+
+#saveRDS(anno_h0, file="annotated_h0.rds")
 ```
 
 ## Hour 1
@@ -200,7 +202,7 @@ length(dds_1) #19536
 dds_1<-DESeq(dds_1)
 
 # Save  object to a file
-saveRDS(dds_1, file = "dds_1.rds")
+#saveRDS(dds_1, file = "dds_1.rds")
 
 res_h1<-results(dds_1)
 summary(res_h1,alpha=0.05)
@@ -212,6 +214,8 @@ resSig_h1<-res_h1[which(res_h1$padj<0.05), ]
 #annotate results to include Gene Function
 anno_h1<-merge(as.data.frame(resSig_h1),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 anno_h1<-na.omit(anno_h1)
+
+saveRDS(anno_h1, file="annotated_h1.rds")
 ```
 
 ## Hour 2
@@ -244,7 +248,7 @@ length(dds_2) #19779
 dds_2<-DESeq(dds_2)
 
 # Save  object to a file
-saveRDS(dds_2, file = "dds_2.rds")
+#saveRDS(dds_2, file = "dds_2.rds")
 
 res_h2<-results(dds_2)
 summary(res_h2,alpha=0.05)
@@ -256,6 +260,8 @@ resSig_h2<-res_h2[which(res_h2$padj<0.05), ]
 #annotate results to include Gene Function
 anno_h2<-merge(as.data.frame(resSig_h2),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 anno_h2<-na.omit(anno_h2)
+
+saveRDS(anno_h2, file="annotated_h2.rds")
 ```
 
 ## Hour 4
@@ -288,7 +294,7 @@ length(dds_4) #19773
 dds_4<-DESeq(dds_4)
 
 # Save  object to a file
-saveRDS(dds_4, file = "dds_4.rds")
+#saveRDS(dds_4, file = "dds_4.rds")
 
 res_h4<-results(dds_4)
 summary(res_h4,alpha=0.05)
@@ -300,6 +306,8 @@ resSig_h4<-res_h4[which(res_h4$padj<0.05), ]
 #annotate results to include Gene Function
 anno_h4<-merge(as.data.frame(resSig_h4),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 anno_h4<-na.omit(anno_h4)
+
+saveRDS(anno_h4, file="annotated_h4.rds")
 ```
 
 # write gene annotations into 1 file

@@ -4,6 +4,11 @@ author: "allyson_demerlis"
 date: "2022-10-25"
 output: html_document
 ---
+
+This Rmarkdown contains the downstream analyses of the DDS object using the Likelihood Ratio Test (LRT). This analysis involves comparing the variance between the full DDS model (~condition + hour + condition:hour) and the reduced model (~condition + hour) to see if there are gene expression patterns in the wounded corals over time (while controlling for any initial differences observed at hour 0).
+
+Analyses include graphs of normalized counts of significant genes and a PCA. All other downstream analyses are not an option because the total number of DGEs is too low (N=3).
+
 # Install and load necessary packages
 ```{r, install/load packages}
 #if you need to install all the packages, you need the package "BiocManager" first.

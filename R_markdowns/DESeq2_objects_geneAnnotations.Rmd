@@ -4,6 +4,11 @@ author: "allyson_demerlis"
 date: "2023-03-21"
 output: html_document
 ---
+
+This Rmarkdown involves cleaning the counts matrix, creating the metadata files, and creating the DDS objects for the full time-series model (Likelihood Ratio Test = LRT), as well as DDS objects for each hour separated (to look at comparisons within each time point). Significant DGE lists were then annotated using the Pdam genome .gff file. 
+
+Note: DDS objects are saved here as .rds files, and then these are imported into all subsequent Rmarkdown files.
+
 # Install and load necessary packages
 ```{r, install/load packages}
 #if you need to install all the packages, you need the package "BiocManager" first.
@@ -72,6 +77,8 @@ gene_name_split_df %>%
      remove_rownames() %>%
  column_to_rownames(var = 'Gene_ID')-> Pdam_Gene_Names_Info 
 ```
+
+
 # DDS Object for Likelihood Ratio Test (LRT) = Used for time-series data
 ```{r}
 metadata = data.frame(sample=colnames(countsmatrix),
@@ -88,6 +95,7 @@ metadata <- metadata %>% column_to_rownames("sample")
 metadata$condition <- as.factor(metadata$condition)
 ```
 
+
 ```{r}
 ddsLRT <- DESeqDataSetFromMatrix(countData = countsmatrix, colData = metadata, design = ~ condition + hour + condition:hour)
 
@@ -98,7 +106,7 @@ ddsLRT <- ddsLRT[keep_LRT,]
 length(ddsLRT) #21267
 
 #help from https://hbctraining.github.io/DGE_workshop/lessons/08_DGE_LRT.html 
-ddsLRT <- DESeq(ddsLRT, test="LRT", reduced = ~ condition + hour)
+ddsLRT <- DESeq(ddsLRT, test="LRT", reduced = ~ condition + hour) #this reduced function is including hour, which means than any differences at time point 0 will be controlled for. (see Michael Love's response on this thread: https://support.bioconductor.org/p/62684/  "Using a reduced formula of ~ time + treat means that genes which show a consistent difference from time 0 onward will not have a small p value. This is what we think you want, because differences between groups at time 0 should be controlled for, e.g. random differences between the individuals chosen for each treatment group which are observable before the treatment takes effect.")
 resLRT <- results(ddsLRT)
 summary(resLRT)
 

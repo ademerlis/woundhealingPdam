@@ -1,0 +1,148 @@
+---
+title: "LRT_analysis"
+author: "allyson_demerlis"
+date: "2022-10-25"
+output: html_document
+---
+# Install and load necessary packages
+```{r, install/load packages}
+#if you need to install all the packages, you need the package "BiocManager" first.
+# if (!require("BiocManager",quietly=TRUE))
+#   install.packages("BiocManager")
+#Now you can use BiocManager to install pacakges like DESeq2
+#BiocManager::install("DESeq2")
+
+library(DESeq2) # needs BiocManager
+library(DEGreport) # needs BiocManager
+  #DEGreport requires lasso2, which is not available for newer versions of R. To install lasso2, run library(remotes) (might need to install that package first), then run:
+#install_version("lasso2", "1.2-22")
+
+library(tidyverse) 
+library(apeglm) # needs BiocManager
+library(factoextra)
+```
+
+# Read in dds object for LRT
+```{r}
+dds_LRT <- readRDS(file = "ddsLRT.rds")
+
+res_LRT <- results(dds_LRT)
+
+summary(res_LRT)
+```
+
+# graph of normalized counts for a gene with condition-specific changes over time
+```{r}
+#which are the most significant genes?
+
+head(res_LRT[order(res_LRT$padj),], 4)
+
+rownames(res_LRT)[which.min(res_LRT$padj)] #"pdam_00001007" is the gene with lowest p-value
+
+plotCounts(dds_LRT, gene = "pdam_00001007", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "orange")) +
+  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00001007")
+```
+
+# Wald tests for log2fold changes at individual time points
+```{r}
+resultsNames(dds_LRT)
+
+res_wounded.hour1 <- results(dds_LRT, name = "conditionWounded.hour1", test="Wald")
+res_wounded.hour1[which(res_wounded.hour1$padj < 0.05),] #only one gene is significant
+
+res_wounded.hour2 <- results(dds_LRT, name = "conditionWounded.hour2", test="Wald")
+res_wounded.hour2[which(res_wounded.hour2$padj < 0.05),] #only one gene is significant
+
+res_wounded.hour4 <- results(dds_LRT, name = "conditionWounded.hour4", test="Wald")
+res_wounded.hour4[which(res_wounded.hour4$padj < 0.05),] #only one gene is significant
+
+res_woundedvscontrol <- results(dds_LRT, name = "condition_Wounded_vs_Control", test="Wald")
+res_woundedvscontrol[which(res_woundedvscontrol$padj < 0.05),] # 2 genes overall: pdam_00008890 and pdam_00004156
+
+#plot the 2 sig genes over time 
+
+plotCounts(dds_LRT, gene = "pdam_00008890", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "orange")) +
+  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00008890")
+
+plotCounts(ddsLRT, gene = "pdam_00004156", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "orange")) +
+  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00004156")
+```
+
+# use LFC to cluster significant genes by their profiles
+```{r}
+#first need to shrink LFC because this generates more accurate log2fold change estimates
+#shrinkage means shrinking estimates towards zero
+
+#ref: https://hbctraining.github.io/DGE_workshop/lessons/05_DGE_DESeq2_analysis2.html#:~:text=Shrunken%20log2%20foldchanges%20(LFC),High%20dispersion%20values
+
+#lfcShrink works on one coefficient (comparison/contrast) at a time, so you need to run one for each coefficient from the LRT model
+
+#(ref:http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#time-course-experiments)
+
+res_wounded.hour1_shrunk <- lfcShrink(dds_LRT, coef = "conditionWounded.hour1", type="apeglm")
+plotMA(res_wounded.hour1_shrunk, ylim = c(-5, 5))
+
+res_wounded.hour2_shrunk <- lfcShrink(dds_LRT, coef = "conditionWounded.hour2", type="apeglm")
+plotMA(res_wounded.hour2_shrunk, ylim = c(-5, 5))
+
+res_wounded.hour4_shrunk <- lfcShrink(dds_LRT, coef = "conditionWounded.hour4", type="apeglm")
+plotMA(res_wounded.hour4_shrunk, ylim = c(-5, 5))
+
+#compare to non-shrunken ones
+
+plotMA(res_wounded.hour1, ylim = c(-5, 5))
+plotMA(res_wounded.hour2, ylim = c(-5, 5))
+plotMA(res_wounded.hour4, ylim = c(-5, 5))
+
+#there are only 3 significant genes, so clustering is not possible (minimum number of genes required is 15 for degPatterns)
+```
+
+# Principal component analyses and Scree plot
+```{r}
+#need to transform the data for plotting
+dds_vst<- vst(dds_LRT,blind=FALSE)
+plotPCA(dds_vst)
+#plotPCA is one function to do it, or you can use the "prcomp" function, which lets you create a scree plot
+pca_lrt <- prcomp(t(assay(dds_vst)))
+fviz_eig(pca_lrt)
+```
+
+## PCA
+```{r}
+pca_LRT <- plotPCA(dds_vst,intgroup=c("condition","hour"),returnData = TRUE)
+ggplot(pca_LRT, aes(PC1, PC2,shape=condition,color=hour)) + 
+  geom_point(size=3) +  xlab(paste0("PC1 39% variance")) + 
+  ylab(paste0("PC2 24% variance")) + 
+  theme(legend.position="right")  + 
+  theme(text = element_text(size=10))  + 
+  theme(legend.key.size = unit(0.5, "cm")) + 
+  geom_point(size = 3) +
+  theme_classic() + 
+  stat_ellipse(aes(PC1, PC2, group=hour), type = "norm")
+```
+
+

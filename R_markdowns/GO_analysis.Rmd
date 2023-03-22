@@ -1,0 +1,716 @@
+---
+title: "wound_healing_analysis_manuscript"
+author: "allyson_demerlis"
+date: "2022-10-25"
+output: html_document
+---
+# Install and load necessary packages
+```{r, install/load packages}
+#if you need to install all the packages, you need the package "BiocManager" first.
+# if (!require("BiocManager",quietly=TRUE))
+#   install.packages("BiocManager")
+#Now you can use BiocManager to install pacakges like DESeq2
+#BiocManager::install("DESeq2")
+
+library(DESeq2)
+
+library(DEGreport) # needs BiocManager
+  #DEGreport requires lasso2, which is not available for newer versions of R. To install lasso2, run library(remotes) (might need to install that package first), then run:
+#install_version("lasso2", "1.2-22")
+
+library(tidyverse) 
+library(EnhancedVolcano) # needs BiocManager
+library(ggpubr)
+library(apeglm) # needs BiocManager
+library(topGO) # needs BiocManager
+library(GO.db) # needs BiocManager
+library(Rgraphviz) # needs BiocManager
+#library(factoextra) #for PCA and eigenvectors
+#library(vegan) #for adonis function for PCA
+library(VennDiagram)
+
+library(scales) #for GO dot plot
+library(viridis) #for GO dot plot
+```
+
+
+# Importing gene counts matrix and formatting it
+```{r}
+#reading in txt file as a table with the headers as the header in the original file
+countsmatrix <-read.table("../WH_Pdam.Rmatrix.txt",header=TRUE)
+
+#removing the Chromosome column from the dataset, and changing the rows to be the gene names
+countsmatrix <-countsmatrix %>% 
+  dplyr::select(-c("Chr")) %>% 
+  column_to_rownames("Geneid")
+
+#removing hour 5 from the dataset because it only has 1 wounded coral, so it is not comparable 
+countsmatrix <- countsmatrix %>% 
+  dplyr::select(!X5331C1:X5335Y)
+
+#function found from stack overflow
+#tidying column names so they don't include an X anymore (R puts an X in front of columns that start with numbers)
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(countsmatrix)
+```
+
+
+# Import gene feature annotation information
+```{r}
+genefeatures <- read.delim(file = "../input files/pdam_genome_IDInfo.gff", header = F)
+head(genefeatures)
+colnames(genefeatures) <- c("IDGeneInfo")
+rownames(genefeatures) <- rownames(countsmatrix)
+
+#removing gene name from the second column
+gene_name_split <- str_split_fixed(genefeatures$IDGeneInfo, " ", 2)
+print(head(gene_name_split))
+colnames(gene_name_split)<- c("Gene_ID","Gene_Function")
+head(gene_name_split)
+gene_name_split_df<-data.frame(gene_name_split)
+head(gene_name_split_df)
+
+#convert the Gene_ID column to the row headers
+gene_name_split_df %>%
+     remove_rownames() %>%
+ column_to_rownames(var = 'Gene_ID')-> Pdam_Gene_Names_Info 
+#%>%
+  #write.csv(file="Pdam_Gene_Names_Info.csv")
+```
+
+# Make metadata file, DDS object, and DESeq2 results for each hour
+
+We are splitting up the hours to compare wounded versus control conditions at each time point. DESeq2 compares differential gene expression of two groups using the Wald test, so we need to subset our data to do each comparison directly.
+
+## Hour zero
+```{r}
+countdata_0 <- countsmatrix %>% dplyr::select(`0301C1`:`0306Z`)
+
+metadata_0 = data.frame(sample=colnames(countdata_0),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_0)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_0)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_0)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_0$condition[str_detect(metadata_0$condition,"TRUE")] <- "Control"
+metadata_0$condition[str_detect(metadata_0$condition,"FALSE")] <- "Wounded"
+
+metadata_0 <- metadata_0 %>% column_to_rownames("sample")
+
+metadata_0$condition <- as.factor(metadata_0$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_0=DESeq2::DESeqDataSetFromMatrix(countData = countdata_0, colData = metadata_0, design = ~condition)
+dds_0 <- estimateSizeFactors(dds_0)
+dds_0$sizeFactor #this is based on an internal normalization where geometric mean is calculated for each gene across all samples, then the counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample (https://rdrr.io › Bioconductor › DESeq2)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_0 <- rowSums(counts(dds_0)) >= 10
+length(keep_0) #26077
+dds_0 <- dds_0[keep_0,]
+length(dds_0) #19447
+
+dds_0<-DESeq(dds_0)
+
+res_h0<-results(dds_0)
+summary(res_h0,alpha=0.05)
+#5 downregulated genes (3 outliers), no upregulated genes
+
+#identifying significant genes
+resSig_h0<-res_h0[which(res_h0$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h0<-merge(as.data.frame(resSig_h0),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h0<-na.omit(anno_h0)
+```
+
+## Hour 1
+```{r}
+countdata_1 <- countsmatrix %>% dplyr::select(`1307C1`:`1312Z`)
+
+metadata_1 = data.frame(sample=colnames(countdata_1),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_1)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_1)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_1)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_1$condition[str_detect(metadata_1$condition,"TRUE")] <- "Control"
+metadata_1$condition[str_detect(metadata_1$condition,"FALSE")] <- "Wounded"
+
+metadata_1 <- metadata_1 %>% column_to_rownames("sample")
+
+metadata_1$condition <- as.factor(metadata_1$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_1=DESeq2::DESeqDataSetFromMatrix(countData = countdata_1, colData = metadata_1, design = ~condition)
+dds_1 <- estimateSizeFactors(dds_1)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_1 <- rowSums(counts(dds_1)) >= 10
+length(keep_1) #26077
+dds_1 <- dds_1[keep_1,]
+length(dds_1) #19536
+
+dds_1<-DESeq(dds_1)
+
+res_h1<-results(dds_1)
+summary(res_h1,alpha=0.05)
+#26 upregulated genes, 49 downregulated, 1 outlier, 758 low counts
+
+#identifying significant genes
+resSig_h1<-res_h1[which(res_h1$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h1<-merge(as.data.frame(resSig_h1),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h1<-na.omit(anno_h1)
+```
+
+## Hour 2
+```{r}
+countdata_2 <- countsmatrix %>% dplyr::select(`2313C1`:`2318Z`)
+
+metadata_2 = data.frame(sample=colnames(countdata_2),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_2)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_2)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_2)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_2$condition[str_detect(metadata_2$condition,"TRUE")] <- "Control"
+metadata_2$condition[str_detect(metadata_2$condition,"FALSE")] <- "Wounded"
+
+metadata_2 <- metadata_2 %>% column_to_rownames("sample")
+
+metadata_2$condition <- as.factor(metadata_2$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_2=DESeq2::DESeqDataSetFromMatrix(countData = countdata_2, colData = metadata_2, design = ~condition)
+dds_2 <- estimateSizeFactors(dds_2)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_2 <- rowSums(counts(dds_2)) >= 10
+length(keep_2) #26077
+dds_2 <- dds_2[keep_2,]
+length(dds_2) #19779
+
+dds_2<-DESeq(dds_2)
+
+res_h2<-results(dds_2)
+summary(res_h2,alpha=0.05)
+#6 upregulated genes, 10 downregulated, 8 outliers, 6517 low counts
+
+#identifying significant genes
+resSig_h2<-res_h2[which(res_h2$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h2<-merge(as.data.frame(resSig_h2),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h2<-na.omit(anno_h2)
+```
+
+## Hour 4
+```{r}
+countdata_4 <- countsmatrix %>% dplyr::select(`4325C1`:`4330Z`)
+
+metadata_4 = data.frame(sample=colnames(countdata_4),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_4)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_4)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_4)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_4$condition[str_detect(metadata_4$condition,"TRUE")] <- "Control"
+metadata_4$condition[str_detect(metadata_4$condition,"FALSE")] <- "Wounded"
+
+metadata_4 <- metadata_4 %>% column_to_rownames("sample")
+
+metadata_4$condition <- as.factor(metadata_4$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_4=DESeq2::DESeqDataSetFromMatrix(countData = countdata_4, colData = metadata_4, design = ~condition)
+dds_4 <- estimateSizeFactors(dds_4)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_4 <- rowSums(counts(dds_4)) >= 10
+length(keep_4) #26077
+dds_4 <- dds_4[keep_4,]
+length(dds_4) #19773
+
+dds_4<-DESeq(dds_4)
+
+res_h4<-results(dds_4)
+summary(res_h4,alpha=0.05)
+#19 upregulated, 27 downregulated, 31 outliers, 1151 low counts
+
+#identifying significant genes
+resSig_h4<-res_h4[which(res_h4$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h4<-merge(as.data.frame(resSig_h4),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h4<-na.omit(anno_h4)
+```
+
+# Combining all annotated differentially expressed genes (padj<0.05) into a table
+```{r}
+anno_h0 %>% 
+  mutate(time = "hour 0") -> anno_h0
+
+anno_h1 %>% 
+  mutate(time = "hour 1") -> anno_h1
+
+anno_h2 %>% 
+  mutate(time = "hour 2") -> anno_h2
+
+anno_h4 %>% 
+  mutate(time = "hour 4") -> anno_h4
+
+full_join(anno_h0, anno_h1) -> annotated_DEG_list
+full_join(anno_h2, annotated_DEG_list) -> annotated_DEG_list
+full_join(anno_h4, annotated_DEG_list) -> annotated_DEG_list
+
+#write_csv(annotated_DEG_list, "../2022 updates with Sami Beasley/annotated_DEG_list_allhours.csv")
+```
+
+
+# Principal component analyses and Scree plots
+```{r}
+#need to transform the data for plotting
+dds_vst0<- vst(dds_0,blind=FALSE)
+plotPCA(dds_vst0)
+#plotPCA is one function to do it, or you can use the "prcomp" function, which lets you create a scree plot
+pca_h0 <- prcomp(t(assay(dds_vst0)))
+fviz_eig(pca_h0)
+
+#you can also manually create a scree plot using the code below
+# percentVar_h0 <-pca_h0$sdev^2 / sum( pca_h0$sdev^2 ) #the contribution to the total variance for each component
+# scree_plot_h0=data.frame(percentVar_h0)
+# scree_plot_h0[,2]<- c(1:6)
+# colnames(scree_plot_h0)<-c("variance","component_number")
+# ggplot(scree_plot_h0, mapping=aes(x=component_number, y=variance))+geom_bar(stat="identity")
+
+dds_vst1<- vst(dds_1,blind=FALSE)
+plotPCA(dds_vst1)
+pca_h1 <- prcomp(t(assay(dds_vst1)))
+fviz_eig(pca_h1)
+
+dds_vst2<- vst(dds_2,blind=FALSE)
+plotPCA(dds_vst2)
+pca_h2 <- prcomp(t(assay(dds_vst2)))
+fviz_eig(pca_h2)
+
+dds_vst4<- vst(dds_4,blind=FALSE)
+plotPCA(dds_vst4)
+pca_h4 <- prcomp(t(assay(dds_vst4)))
+fviz_eig(pca_h4)
+```
+
+
+## PCA figures for manuscript
+```{r}
+#plotting the PCA in ggplot
+pca12_0 <- plotPCA(dds_vst0,intgroup=c("condition"),returnData = TRUE)
+pca_0 = ggplot(pca12_0, aes(PC1,PC2,shape=condition,color=condition)) + 
+  geom_point(size=3) +  
+  xlab(paste0("PC1 (49%)")) +
+  ylab(paste0("PC2 (24%)")) +
+  theme(legend.position="right")  + 
+  theme(text = element_text(size=12))  + 
+  theme(legend.key.size = unit(0.5, "cm")) + 
+  theme(legend.title=element_text(size=12)) +
+  scale_shape_discrete(name="Condition") +
+  scale_color_discrete(name="Condition") +
+  theme_classic(base_size=12,base_family="serif")
+
+pca12_1 <- plotPCA(dds_vst1,intgroup=c("condition"),returnData = TRUE)
+pca_1 = ggplot(pca12_1, aes(PC1, PC2,shape=condition,color=condition)) + 
+  geom_point(size=3) + 
+  xlab(paste0("PC1 (38%)")) +
+  ylab(paste0("PC2 (23%)")) +
+  theme(legend.position="right")  + 
+  theme(text = element_text(size=12)) + 
+  theme(legend.key.size = unit(0.5, "cm")) + 
+  theme(legend.title=element_text(size=12)) +
+  scale_shape_discrete(name="Condition") +
+  scale_color_discrete(name="Condition") +
+  theme_classic(base_size=12,base_family="serif")
+
+pca12_2 <- plotPCA(dds_vst2,intgroup=c("condition"),returnData = TRUE)
+pca_2 = ggplot(pca12_2, aes(PC1, PC2,shape=condition,color=condition)) + 
+  geom_point(size=3) +   
+  xlab(paste0("PC1 (35%)")) +
+  ylab(paste0("PC2 (29%)")) +
+  theme(legend.position="right")  + 
+  theme(text = element_text(size=12)) + 
+  theme(legend.key.size = unit(0.5, "cm")) + 
+  theme(legend.title=element_text(size=12)) +
+  scale_shape_discrete(name="Condition") +
+  scale_color_discrete(name="Condition") +
+  theme_classic(base_size=12,base_family="serif")
+
+pca12_4 <- plotPCA(dds_vst4,intgroup=c("condition"),returnData = TRUE)
+pca_4 = ggplot(pca12_4, aes(PC1, PC2,shape=condition,color=condition)) + 
+  geom_point(size=3) +  
+  xlab(paste0("PC1 (56%)")) +
+  ylab(paste0("PC2 (21%)")) +
+  theme(legend.position="right")  + 
+  theme(text = element_text(size=12))  + 
+  theme(legend.key.size = unit(0.5, "cm")) + 
+  theme(legend.title=element_text(size=12)) +
+  scale_shape_discrete(name="Condition") +
+  scale_color_discrete(name="Condition") +
+  theme_classic(base_size=12,base_family="serif")
+
+pca_combined<-ggarrange(pca_0,pca_1,pca_2,pca_4,
+          common.legend = TRUE,
+          legend="right",
+          labels=c("A","B","C","D"),
+          ncol=2,nrow=2)
+
+pca_combined
+#brought this figure into Illustrator to edit colors and formatting
+```
+
+
+# Volcano Plot for each hour
+```{r}
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+  # this can be achieved with nested ifelse statements
+ keyvals_h0 <- ifelse(
+    res_h0$log2FoldChange < -2,'royalblue',
+      ifelse(res_h0$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h0[is.na(keyvals_h0)] <- 'black'
+  names(keyvals_h0)[keyvals_h0 == 'red'] <- 'high'
+  names(keyvals_h0)[keyvals_h0 == 'black'] <- 'mid'
+  names(keyvals_h0)[keyvals_h0 == 'royalblue'] <- 'low'
+  
+keyvals_h1 <- ifelse(
+    res_h1$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h1$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h1[is.na(keyvals_h1)] <- 'black'
+  names(keyvals_h1)[keyvals_h1 == 'red'] <- 'high'
+  names(keyvals_h1)[keyvals_h1 == 'black'] <- 'mid'
+  names(keyvals_h1)[keyvals_h1 == 'royalblue'] <- 'low'
+
+keyvals_h2 <- ifelse(
+    res_h2$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h2$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h2[is.na(keyvals_h2)] <- 'black'
+  names(keyvals_h2)[keyvals_h2 == 'red'] <- 'high'
+  names(keyvals_h2)[keyvals_h2 == 'black'] <- 'mid'
+  names(keyvals_h2)[keyvals_h2 == 'royalblue'] <- 'low'
+  
+keyvals_h4 <- ifelse(
+    res_h4$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h4$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h4[is.na(keyvals_h4)] <- 'black'
+  names(keyvals_h4)[keyvals_h4 == 'red'] <- 'high'
+  names(keyvals_h4)[keyvals_h4 == 'black'] <- 'mid'
+  names(keyvals_h4)[keyvals_h4 == 'royalblue'] <- 'low'
+  
+#hour 0
+EnhancedVolcano(res_h0, #The default cut-off for log2FC is >|2|; the default cut-off for P value is 10e-6.
+    lab = rownames(res_h0),
+    selectLab = rownames(res_h0)[which(names(keyvals_h0) %in% c('high', 'low'))],
+    labSize = 4.5,
+    colCustom = keyvals_h0,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue') #you want to use pvalue instead of padjusted for volcano visualization because padjusted turns all the non-significant ones to zero
+ggsave("volcano_h0.pdf", width = 7, height = 10)
+
+#hour 1
+EnhancedVolcano(res_h1,
+    lab = rownames(res_h1),
+    selectLab = rownames(res_h1)[which(names(keyvals_h1) %in% c('high', 'low'))],
+    labSize = 2,
+    drawConnectors = TRUE,
+    widthConnectors = 1.0,
+    colCustom = keyvals_h1,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h1.pdf", width = 7, height = 10)
+
+#hour 2
+EnhancedVolcano(res_h2,
+    lab = rownames(res_h2),
+    selectLab = rownames(res_h2)[which(names(keyvals_h2) %in% c('high', 'low'))],
+    labSize = 4.5,
+    drawConnectors = TRUE,
+    colCustom = keyvals_h2,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h2.pdf", width = 7, height = 10)
+#note: one of the pdam genes (pdam_0009111) was annotated in EnhancedVolcano plot but isn't included in the anno_h2 dataset because we used the function "na.omit" to remove rows that had na's. However some of the significant genes have na's for the p-adjusted value.
+
+#hour 4
+EnhancedVolcano(res_h4,
+    lab = rownames(res_h4),
+    selectLab = rownames(res_h4)[which(names(keyvals_h4) %in% c('high', 'low'))],
+    labSize = 4.5,
+    pCutoff = 10e-5,
+    colCustom = keyvals_h4,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h4.pdf", width = 7, height = 10)
+```
+
+
+
+
+# topGO analysis (Molecular Function)
+```{r}
+#following Michael Connelly's code (github)
+
+#Input required *P. damicornis* GO annotation data and construct Gene-to-GO object for custom annotation mapping
+GO_geneID<-readMappings(file="../2022 updates with Sami Beasley/pdam_genome_GOgenes.txt") #Mike made this file
+
+geneID_GO <- inverseList(GO_geneID)
+str(head(geneID_GO))
+
+#Generate gene universe and GO universe from Gene-to-GO and GO-to-Gene objects
+geneNames <- names(geneID_GO)
+str(head(geneNames))
+
+GONames <- names(GO_geneID)
+str(head(GONames))
+```
+
+Hour 0 no annotations so no GO analysis
+
+## topGO analysis Hour 1 Molecular Function (MF)
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_h1_GO<-as.data.frame(res_h1)
+res_h1_GO<- res_h1_GO%>%mutate(Group=case_when(padj<0.05~"1",padj>=0.05~"0"))
+res_h1_GO<-na.omit(res_h1_GO)
+
+#create the gene universe
+gene_universe_h1<-as.numeric(res_h1_GO$Group)
+gene_universe_h1<-factor(gene_universe_h1)
+names(gene_universe_h1) <- rownames(res_h1_GO) 
+
+#create topGO data object
+GO_MF_h1 <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h1,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h1_resultFisher01<-runTest(GO_MF_h1,algorithm = "weight01", statistic = "fisher")
+GO_MF_h1_resultFisherclassic<-runTest(GO_MF_h1,algorithm = "classic", statistic = "fisher")
+GO_MF_h1_resultclassicKS <- runTest(GO_MF_h1, algorithm = "classic", statistic = "ks")
+GO_MF_h1_resultelimKS <- runTest(GO_MF_h1, algorithm = "elim", statistic = "ks")
+
+
+#generate results table
+GO_MF_h1_resultstable<-GenTable(GO_MF_h1, 
+                                Fisher01 = GO_MF_h1_resultFisher01,
+                                Fisherclassic = GO_MF_h1_resultFisherclassic,
+                                classicKS = GO_MF_h1_resultclassicKS,
+                                elimKS = GO_MF_h1_resultelimKS,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h1,score(GO_MF_h1_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h1_resultstable %>% filter(Significant >= 1) %>% mutate(hour=1)-> sigGO_MF_h1 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+
+## topGO analysis Hour 2 Molecular Function (MF)
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_h2_GO<-as.data.frame(res_h2)
+res_h2_GO<- res_h2_GO%>%mutate(Group=case_when(padj<0.05~"1",padj>=0.05~"0"))
+res_h2_GO<-na.omit(res_h2_GO)
+
+#create the gene universe
+gene_universe_h2<-as.numeric(res_h2_GO$Group)
+gene_universe_h2<-factor(gene_universe_h2)
+names(gene_universe_h2) <- rownames(res_h2_GO) 
+
+#create topGO data object
+GO_MF_h2 <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h2,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h2_resultFisher01<-runTest(GO_MF_h2,algorithm = "weight01", statistic = "fisher")
+GO_MF_h2_resultFisherclassic<-runTest(GO_MF_h2,algorithm = "classic", statistic = "fisher")
+GO_MF_h2_resultclassicKS <- runTest(GO_MF_h2, algorithm = "classic", statistic = "ks")
+GO_MF_h2_resultelimKS <- runTest(GO_MF_h2, algorithm = "elim", statistic = "ks")
+
+
+#generate results table
+GO_MF_h2_resultstable<-GenTable(GO_MF_h2, 
+                                Fisher01 = GO_MF_h2_resultFisher01,
+                                Fisherclassic = GO_MF_h2_resultFisherclassic,
+                                classicKS = GO_MF_h2_resultclassicKS,
+                                elimKS = GO_MF_h2_resultelimKS,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h2,score(GO_MF_h2_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h2_resultstable %>% filter(Significant >= 1) %>% mutate(hour=2)-> sigGO_MF_h2 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+## topGO analysis Hour 4 Molecular Function (MF)
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_h4_GO<-as.data.frame(res_h4)
+res_h4_GO<- res_h4_GO%>%mutate(Group=case_when(padj<0.05~"1",padj>=0.05~"0"))
+res_h4_GO<-na.omit(res_h4_GO)
+
+#create the gene universe
+gene_universe_h4<-as.numeric(res_h4_GO$Group)
+gene_universe_h4<-factor(gene_universe_h4)
+names(gene_universe_h4) <- rownames(res_h4_GO) 
+
+#create topGO data object
+GO_MF_h4 <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h4,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h4_resultFisher01<-runTest(GO_MF_h4,algorithm = "weight01", statistic = "fisher")
+GO_MF_h4_resultFisherclassic<-runTest(GO_MF_h4,algorithm = "classic", statistic = "fisher")
+GO_MF_h4_resultclassicKS <- runTest(GO_MF_h4, algorithm = "classic", statistic = "ks")
+GO_MF_h4_resultelimKS <- runTest(GO_MF_h4, algorithm = "elim", statistic = "ks")
+
+
+#generate results table
+GO_MF_h4_resultstable<-GenTable(GO_MF_h4, 
+                                Fisher01 = GO_MF_h4_resultFisher01,
+                                Fisherclassic = GO_MF_h4_resultFisherclassic,
+                                classicKS = GO_MF_h4_resultclassicKS,
+                                elimKS = GO_MF_h4_resultelimKS,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h4,score(GO_MF_h4_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h4_resultstable %>% filter(Significant >= 1) %>% mutate(hour=4)-> sigGO_MF_h4 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+
+## combine all significant gene GO lists per hour and visualize as table
+```{r}
+full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%  #144 GO terms total
+  filter(Fisherclassic < 0.05) #25 GO terms now
+  #write_csv("GO_MF_allhours.csv")
+
+#dot plot
+full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%
+  filter(Fisherclassic < 0.05) %>% 
+  mutate(Fisherclassic = as.numeric(Fisherclassic)) %>% 
+  mutate(Annotated = as.numeric(Annotated)) %>% 
+ggplot(data=., aes(x=-log(Fisherclassic), y=reorder(Term, -Fisherclassic))) +
+    geom_point(aes(size=Annotated, color=-log(Fisherclassic))) +
+    scale_color_viridis(option="plasma") +
+  labs(x="-log P-Value", y="Gene Ontology Term Description", title=paste("Significant Molecular Functions"), color = "-log(P-value)") +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 30)) +
+  theme_bw() +
+  facet_grid(vars(hour), scales = "free") + 
+  scale_size(range = c(2,6))
+##ggsave("significantMF_GO_perhour.pdf")
+
+#need to make one that has the GO term next to it so I can easily google it for the illustrator manual edits
+full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%
+  filter(Fisherclassic < 0.05) %>% 
+  mutate(Fisherclassic = as.numeric(Fisherclassic)) %>% 
+  mutate(Annotated = as.numeric(Annotated)) %>% 
+  mutate(GO_term=str_c(GO.ID,Term, sep=" ")) %>% 
+  ggplot(data=., aes(x=-log(Fisherclassic), y=reorder(GO_term, -Fisherclassic))) +
+    geom_point(aes(size=Annotated, color=-log(Fisherclassic))) +
+    scale_color_viridis(option="plasma") +
+  labs(x="-log P-Value", y="Gene Ontology Term Description", title=paste("Significant Molecular Functions"), color = "-log(P-value)") +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 50)) +
+  theme_bw() +
+  facet_grid(vars(hour), scales = "free") + 
+  scale_size(range = c(2,6))
+```
+
+
+
+# Venn Diagrams
+## for DGEs at each hour
+```{r}
+# need to manually calculate the totals and the intersects of each interaction (0-1, 0-2, 0-4, 1-2, 1-4, 2-4)
+
+# use data frames anno_h0, anno_h1, anno_h2, anno_h4
+# all DEGs is annotated_DEG_list
+
+length(annotated_DEG_list$Row.names) #142 total
+
+##Pairwise
+h0_h1 <- intersect(anno_h0$Row.names, anno_h1$Row.names)
+h0_h2 <- intersect(anno_h0$Row.names, anno_h2$Row.names)
+h0_h4 <- intersect(anno_h0$Row.names, anno_h4$Row.names)
+h1_h2 <- intersect(anno_h1$Row.names, anno_h2$Row.names)
+h1_h4 <- intersect(anno_h1$Row.names, anno_h4$Row.names)
+h2_h4 <- intersect(anno_h2$Row.names, anno_h4$Row.names)
+
+##Triple
+h0_h1_h2 <- intersect(h0_h1, anno_h2$Row.names)
+h0_h2_h4 <- intersect(h0_h2, anno_h4$Row.names)
+h1_h2_h4 <- intersect(h1_h2, anno_h4$Row.names)
+h0_h1_h4 <- intersect(h0_h1, anno_h4$Row.names)
+##Quadruple
+h0_h1_h2_h4 <- intersect(h0_h1, h2_h4)
+
+DGE_hour_venn <- draw.quad.venn(area1 = length(anno_h0$Row.names),
+               area2 = length(anno_h1$Row.names),
+               area3 = length(anno_h2$Row.names),
+               area4 = length(anno_h4$Row.names),
+               n12 = length(h0_h1),
+               n13 = length(h0_h2),
+               n14 = length(h0_h4),
+               n23 = length(h1_h2),
+               n24 = length(h1_h4),
+               n34 = length(h2_h4),
+               n123 = length(h0_h1_h2),
+               n124 = length(h0_h1_h4),
+               n134 = length(h0_h2_h4),
+               n234 = length(h1_h2_h4),
+               n1234 = length(h0_h1_h2_h4),
+               category = c("Hour 0", "Hour 1", "Hour 2", "Hour 4"),
+               fill = c("olivedrab3", "skyblue", "springgreen", "deepskyblue"),
+               lwd = rep(1,4),
+               cat.cex = rep(1.4, 4),
+               #cat.fontfamily = rep("Arial", 4),
+               cat.fontface = rep("plain", 4),
+               alpha = c(0.3,0.3,0.3,0.3),
+               cex = c(rep(1.4,5), 3, rep(1.4, 9)),
+               fontface = c(rep("plain", 5), "bold", rep("plain", 9)),
+               #fontfamily = c(rep("Arial", 15)),
+               label.col = c(rep("black", 5), "red", rep("black", 9)),
+               print.mode = "raw",
+               sigdigs = 2,
+               scaled = TRUE
+) 
+#pdf("~/OneDrive - University of Miami/Cnidimmunity Lab/Wound_Healing_Project/2022 updates with Sami Beasley/manuscript figures and tables/VennDiagram_DGEallhours")
+grid.draw(DGE_hour_venn)
+```
+
+
+
+
+

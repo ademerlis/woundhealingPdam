@@ -93,6 +93,8 @@ metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
 metadata <- metadata %>% column_to_rownames("sample")
 
 metadata$condition <- as.factor(metadata$condition)
+
+saveRDS(metadata, file = "metadata.rds")
 ```
 
 

@@ -133,14 +133,20 @@ pca_combined
 #we use the dds object instead of the original countdata_0 matrix because this has filtered out genes with low counts (<10)
 hour0_countsmatrix <- assay(dds_0)
 t(hour0_countsmatrix) -> hour0_countsmatrix 
+
+#import metadata file
+metadata <- readRDS("metadata.rds")
+
+metadata_0 <- metadata %>% filter(hour == "0")
+
 PCA.h0.countsdata <- merge(metadata_0, hour0_countsmatrix, by='row.names', all=TRUE)
 
 # scale data
-vegan <- scale(PCA.h0.countsdata[c(5:19451)]) #we just want to scale the gene counts
+vegan_h0 <- scale(PCA.h0.countsdata[c(5:19451)]) #we just want to scale the gene counts
 
 # PERMANOVA 
-permanova<-adonis2(vegan ~ condition, data = PCA.h0.countsdata, method='eu', na.rm=TRUE, nperm = 999)
-permanova
+permanova_h0 <-adonis2(vegan_h0 ~ condition, data = PCA.h0.countsdata, method='eu', na.rm=TRUE, nperm = 999)
+permanova_h0 #not significant
 ```
 
 ## PERMANOVA for hour 1
@@ -148,14 +154,17 @@ permanova
 #we use the dds object instead of the original countdata_0 matrix because this has filtered out genes with low counts (<10)
 hour1_countsmatrix <- assay(dds_1)
 t(hour1_countsmatrix) -> hour1_countsmatrix 
+
+metadata_1 <- metadata %>% filter(hour == "1")
+
 PCA.h1.countsdata <- merge(metadata_1, hour1_countsmatrix, by='row.names', all=TRUE)
 
 # scale data
-vegan <- scale(PCA.h1.countsdata[c(5:19536)]) #we just want to scale the gene counts
+vegan_h1 <- scale(PCA.h1.countsdata[c(5:19536)]) #we just want to scale the gene counts
 
 # PERMANOVA 
-permanova<-adonis2(vegan ~ condition, data = PCA.h1.countsdata, method='eu', na.rm=TRUE, nperm = 999)
-permanova
+permanova_h1 <-adonis2(vegan_h1 ~ condition, data = PCA.h1.countsdata, method='eu', na.rm=TRUE, nperm = 999)
+permanova_h1 #not significant
 ```
 
 ## PERMANOVA for hour 2
@@ -163,14 +172,17 @@ permanova
 #we use the dds object instead of the original countdata_0 matrix because this has filtered out genes with low counts (<10)
 hour2_countsmatrix <- assay(dds_2)
 t(hour2_countsmatrix) -> hour2_countsmatrix 
+
+metadata_2 <- metadata %>% filter(hour == "2")
+
 PCA.h2.countsdata <- merge(metadata_2, hour2_countsmatrix, by='row.names', all=TRUE)
 
 # scale data
-vegan <- scale(PCA.h2.countsdata[c(5:19779)]) #we just want to scale the gene counts
+vegan_h2 <- scale(PCA.h2.countsdata[c(5:19779)]) #we just want to scale the gene counts
 
 # PERMANOVA 
-permanova<-adonis2(vegan ~ condition, data = PCA.h2.countsdata, method='eu', na.rm=TRUE, nperm = 999)
-permanova
+permanova_h2<-adonis2(vegan_h2 ~ condition, data = PCA.h2.countsdata, method='eu', na.rm=TRUE, nperm = 999)
+permanova_h2 #not significant
 ```
 
 ## PERMANOVA for hour 4
@@ -178,12 +190,15 @@ permanova
 #we use the dds object instead of the original countdata_0 matrix because this has filtered out genes with low counts (<10)
 hour4_countsmatrix <- assay(dds_4)
 t(hour4_countsmatrix) -> hour4_countsmatrix 
+
+metadata_4 <- metadata %>% filter(hour == "4")
+
 PCA.h4.countsdata <- merge(metadata_4, hour4_countsmatrix, by='row.names', all=TRUE)
 
 # scale data
-vegan <- scale(PCA.h4.countsdata[c(5:19773)]) #we just want to scale the gene counts
+vegan_h4 <- scale(PCA.h4.countsdata[c(5:19773)]) #we just want to scale the gene counts
 
 # PERMANOVA 
-permanova<-adonis2(vegan ~ condition, data = PCA.h4.countsdata, method='eu', na.rm=TRUE, nperm = 999)
-permanova
+permanova_h4 <-adonis2(vegan_h4 ~ condition, data = PCA.h4.countsdata, method='eu', na.rm=TRUE, nperm = 999)
+permanova_h4 #not significant
 ```

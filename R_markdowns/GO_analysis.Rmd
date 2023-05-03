@@ -41,7 +41,7 @@ res_h4 <- results(dds_4)
 #following Michael Connelly's code (github)
 
 #Input required *P. damicornis* GO annotation data and construct Gene-to-GO object for custom annotation mapping
-GO_geneID<-readMappings(file="../input_files//pdam_genome_GOgenes.txt") #Mike made this file
+GO_geneID<-readMappings(file="../input_files/pdam_genome_GOgenes.txt") #Mike made this file
 
 geneID_GO <- inverseList(GO_geneID)
 str(head(geneID_GO))
@@ -58,7 +58,9 @@ Hour 0 had no annotations so no GO analysis
 
 # Hour 1
 
-## topGO analysis Hour 1 Molecular Function (MF)
+## topGO analysis Hour 1 Molecular Function (MF) 
+
+#both up and downregulated genes combined
 ```{r}
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_h1_GO<-as.data.frame(res_h1)
@@ -78,22 +80,15 @@ GO_MF_h1 <-new("topGOdata",
                 annotationFun=annFUN.gene2GO,
                 gene2GO = geneID_GO)
 
-# tests to identify enriched gene ontology terms
-GO_MF_h1_resultFisher01<-runTest(GO_MF_h1,algorithm = "weight01", statistic = "fisher")
+# test to identify enriched gene ontology terms
 GO_MF_h1_resultFisherclassic<-runTest(GO_MF_h1,algorithm = "classic", statistic = "fisher")
-GO_MF_h1_resultclassicKS <- runTest(GO_MF_h1, algorithm = "classic", statistic = "ks")
-GO_MF_h1_resultelimKS <- runTest(GO_MF_h1, algorithm = "elim", statistic = "ks")
-
 
 #generate results table
 GO_MF_h1_resultstable<-GenTable(GO_MF_h1, 
-                                Fisher01 = GO_MF_h1_resultFisher01,
                                 Fisherclassic = GO_MF_h1_resultFisherclassic,
-                                classicKS = GO_MF_h1_resultclassicKS,
-                                elimKS = GO_MF_h1_resultelimKS,
                                 topNodes = 50)
 
-showSigOfNodes(GO_MF_h1,score(GO_MF_h1_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+showSigOfNodes(GO_MF_h1,score(GO_MF_h1_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
 GO_MF_h1_resultstable %>% filter(Significant >= 1) %>% mutate(hour=1)-> sigGO_MF_h1 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
@@ -104,13 +99,14 @@ GO_MF_h1_resultstable %>% filter(Significant >= 1) %>% mutate(hour=1)-> sigGO_MF
 ```{r}
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_GO_h1_up <- as.data.frame(res_h1) %>%
-  mutate(Group=case_when(padj<0.05 & log2FoldChange >= 2 ~"1", padj>=0.05 ~"0")) #selecting log2fold change level of 2 because that matches volcano plots
-res_GO_h1_up <- na.omit(res_GO_h1_up)
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange > 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
 
-res_GO_h1_up %>% filter(Group == "1") #5 genes - matches volcano plot
+res_GO_h1_up %>% filter(Group == "1") #26 genes
 
 #create the gene universe
 gene_universe_h1_up <-as.numeric(res_GO_h1_up$Group)
+length(gene_universe_h1_up) #18,777 genes
 gene_universe_h1_up <-factor(gene_universe_h1_up)
 names(gene_universe_h1_up) <- rownames(res_GO_h1_up) 
 
@@ -123,27 +119,64 @@ GO_MF_h1_up <-new("topGOdata",
                 gene2GO = geneID_GO)
 
 # tests to identify enriched gene ontology terms
-GO_MF_h1_up_resultFisher01<-runTest(GO_MF_h1_up,algorithm = "weight01", statistic = "fisher")
 GO_MF_h1_up_resultFisherclassic<-runTest(GO_MF_h1_up,algorithm = "classic", statistic = "fisher")
-GO_MF_h1_up_resultclassicKS <- runTest(GO_MF_h1_up, algorithm = "classic", statistic = "ks")
-GO_MF_h1_up_resultelimKS <- runTest(GO_MF_h1_up, algorithm = "elim", statistic = "ks")
-
 
 #generate results table
-GO_MF_h1_up_resultstable<-GenTable(GO_MF_h1_up, 
-                                Fisher01 = GO_MF_h1_up_resultFisher01,
+GO_MF_h1_up_resultstable<-GenTable(GO_MF_h1_up,
                                 Fisherclassic = GO_MF_h1_up_resultFisherclassic,
-                                classicKS = GO_MF_h1_up_resultclassicKS,
-                                elimKS = GO_MF_h1_up_resultelimKS,
                                 topNodes = 50)
 
-showSigOfNodes(GO_MF_h1_up,score(GO_MF_h1_up_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+showSigOfNodes(GO_MF_h1_up,score(GO_MF_h1_up_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
 GO_MF_h1_up_resultstable %>% 
   filter(Significant >= 1) %>% 
-  mutate(hour=1)-> sigGO_MF_h1_up #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+  mutate(hour=1) %>% 
+  mutate(regulation_direction = "Up") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h1_up #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
 
+
+### Down-regulated genes in hour 1
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_GO_h1_down <- as.data.frame(res_h1) %>%
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange < 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+
+res_GO_h1_down %>% filter(Group == "1") #49 genes
+
+#create the gene universe
+gene_universe_h1_down <-as.numeric(res_GO_h1_down$Group)
+length(gene_universe_h1_down) #18,777 genes
+gene_universe_h1_down <-factor(gene_universe_h1_down)
+names(gene_universe_h1_down) <- rownames(res_GO_h1_down) 
+
+#create topGO data object
+GO_MF_h1_down <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h1_down,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h1_down_resultFisherclassic<-runTest(GO_MF_h1_down,algorithm = "classic", statistic = "fisher")
+
+#generate results table
+GO_MF_h1_down_resultstable<-GenTable(GO_MF_h1_down,
+                                Fisherclassic = GO_MF_h1_down_resultFisherclassic,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h1_down,score(GO_MF_h1_down_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h1_down_resultstable %>% 
+  filter(Significant >= 1) %>% 
+  mutate(hour=1) %>% 
+  mutate(regulation_direction = "down") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h1_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
 
 ## topGO analysis Hour 2 Molecular Function (MF)
 ```{r}
@@ -262,70 +295,4 @@ full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%
   facet_grid(vars(hour), scales = "free") + 
   scale_size(range = c(2,6))
 ```
-
-
-
-# Venn Diagrams
-## for DGEs at each hour
-```{r}
-# need to manually calculate the totals and the intersects of each interaction (0-1, 0-2, 0-4, 1-2, 1-4, 2-4)
-
-# use data frames anno_h0, anno_h1, anno_h2, anno_h4
-# all DEGs is annotated_DEG_list
-
-length(annotated_DEG_list$Row.names) #142 total
-
-##Pairwise
-h0_h1 <- intersect(anno_h0$Row.names, anno_h1$Row.names)
-h0_h2 <- intersect(anno_h0$Row.names, anno_h2$Row.names)
-h0_h4 <- intersect(anno_h0$Row.names, anno_h4$Row.names)
-h1_h2 <- intersect(anno_h1$Row.names, anno_h2$Row.names)
-h1_h4 <- intersect(anno_h1$Row.names, anno_h4$Row.names)
-h2_h4 <- intersect(anno_h2$Row.names, anno_h4$Row.names)
-
-##Triple
-h0_h1_h2 <- intersect(h0_h1, anno_h2$Row.names)
-h0_h2_h4 <- intersect(h0_h2, anno_h4$Row.names)
-h1_h2_h4 <- intersect(h1_h2, anno_h4$Row.names)
-h0_h1_h4 <- intersect(h0_h1, anno_h4$Row.names)
-##Quadruple
-h0_h1_h2_h4 <- intersect(h0_h1, h2_h4)
-
-DGE_hour_venn <- draw.quad.venn(area1 = length(anno_h0$Row.names),
-               area2 = length(anno_h1$Row.names),
-               area3 = length(anno_h2$Row.names),
-               area4 = length(anno_h4$Row.names),
-               n12 = length(h0_h1),
-               n13 = length(h0_h2),
-               n14 = length(h0_h4),
-               n23 = length(h1_h2),
-               n24 = length(h1_h4),
-               n34 = length(h2_h4),
-               n123 = length(h0_h1_h2),
-               n124 = length(h0_h1_h4),
-               n134 = length(h0_h2_h4),
-               n234 = length(h1_h2_h4),
-               n1234 = length(h0_h1_h2_h4),
-               category = c("Hour 0", "Hour 1", "Hour 2", "Hour 4"),
-               fill = c("olivedrab3", "skyblue", "springgreen", "deepskyblue"),
-               lwd = rep(1,4),
-               cat.cex = rep(1.4, 4),
-               #cat.fontfamily = rep("Arial", 4),
-               cat.fontface = rep("plain", 4),
-               alpha = c(0.3,0.3,0.3,0.3),
-               cex = c(rep(1.4,5), 3, rep(1.4, 9)),
-               fontface = c(rep("plain", 5), "bold", rep("plain", 9)),
-               #fontfamily = c(rep("Arial", 15)),
-               label.col = c(rep("black", 5), "red", rep("black", 9)),
-               print.mode = "raw",
-               sigdigs = 2,
-               scaled = TRUE
-) 
-#pdf("~/OneDrive - University of Miami/Cnidimmunity Lab/Wound_Healing_Project/2022 updates with Sami Beasley/manuscript figures and tables/VennDiagram_DGEallhours")
-grid.draw(DGE_hour_venn)
-```
-
-
-
-
 

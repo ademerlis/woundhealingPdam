@@ -179,6 +179,8 @@ GO_MF_h1_down_resultstable %>%
 ```
 
 ## topGO analysis Hour 2 Molecular Function (MF)
+
+#both up and downregulated genes combined
 ```{r}
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_h2_GO<-as.data.frame(res_h2)
@@ -199,26 +201,106 @@ GO_MF_h2 <-new("topGOdata",
                 gene2GO = geneID_GO)
 
 # tests to identify enriched gene ontology terms
-GO_MF_h2_resultFisher01<-runTest(GO_MF_h2,algorithm = "weight01", statistic = "fisher")
 GO_MF_h2_resultFisherclassic<-runTest(GO_MF_h2,algorithm = "classic", statistic = "fisher")
-GO_MF_h2_resultclassicKS <- runTest(GO_MF_h2, algorithm = "classic", statistic = "ks")
-GO_MF_h2_resultelimKS <- runTest(GO_MF_h2, algorithm = "elim", statistic = "ks")
-
 
 #generate results table
-GO_MF_h2_resultstable<-GenTable(GO_MF_h2, 
-                                Fisher01 = GO_MF_h2_resultFisher01,
+GO_MF_h2_resultstable<-GenTable(GO_MF_h2,
                                 Fisherclassic = GO_MF_h2_resultFisherclassic,
-                                classicKS = GO_MF_h2_resultclassicKS,
-                                elimKS = GO_MF_h2_resultelimKS,
                                 topNodes = 50)
 
-showSigOfNodes(GO_MF_h2,score(GO_MF_h2_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+showSigOfNodes(GO_MF_h2,score(GO_MF_h2_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
 GO_MF_h2_resultstable %>% filter(Significant >= 1) %>% mutate(hour=2)-> sigGO_MF_h2 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
 
+## splitting up- and down-regulated genes based on log2fold change for hour 2
+
+### Up-regulated genes in hour 2
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_GO_h2_up <- as.data.frame(res_h2) %>%
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange > 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+
+res_GO_h2_up %>% filter(Group == "1") #6 genes
+
+#create the gene universe
+gene_universe_h2_up <-as.numeric(res_GO_h2_up$Group)
+length(gene_universe_h2_up) #13,254 genes
+gene_universe_h2_up <-factor(gene_universe_h2_up)
+names(gene_universe_h2_up) <- rownames(res_GO_h2_up) 
+
+#create topGO data object
+GO_MF_h2_up <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h2_up,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h2_up_resultFisherclassic<-runTest(GO_MF_h2_up,algorithm = "classic", statistic = "fisher")
+
+#generate results table
+GO_MF_h2_up_resultstable<-GenTable(GO_MF_h2_up,
+                                Fisherclassic = GO_MF_h2_up_resultFisherclassic,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h2_up,score(GO_MF_h2_up_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h2_up_resultstable %>% 
+  filter(Significant >= 1) %>% 
+  mutate(hour=2) %>% 
+  mutate(regulation_direction = "Up") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h2_up #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+### Down-regulated genes in hour 2
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_GO_h2_down <- as.data.frame(res_h2) %>%
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange < 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+
+res_GO_h2_down %>% filter(Group == "1") #10 genes
+
+#create the gene universe
+gene_universe_h2_down <-as.numeric(res_GO_h2_down$Group)
+length(gene_universe_h2_down) #13,254 genes
+gene_universe_h2_down <-factor(gene_universe_h2_down)
+names(gene_universe_h2_down) <- rownames(res_GO_h2_down) 
+
+#create topGO data object
+GO_MF_h2_down <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h2_down,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h2_down_resultFisherclassic<-runTest(GO_MF_h2_down,algorithm = "classic", statistic = "fisher")
+
+#generate results table
+GO_MF_h2_down_resultstable<-GenTable(GO_MF_h2_down,
+                                Fisherclassic = GO_MF_h2_down_resultFisherclassic,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h2_down,score(GO_MF_h2_down_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h2_down_resultstable %>% 
+  filter(Significant >= 1) %>% 
+  mutate(hour=2) %>% 
+  mutate(regulation_direction = "down") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h2_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+
 ## topGO analysis Hour 4 Molecular Function (MF)
+
+#both up and downregulated genes combined
 ```{r}
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_h4_GO<-as.data.frame(res_h4)
@@ -239,23 +321,100 @@ GO_MF_h4 <-new("topGOdata",
                 gene2GO = geneID_GO)
 
 # tests to identify enriched gene ontology terms
-GO_MF_h4_resultFisher01<-runTest(GO_MF_h4,algorithm = "weight01", statistic = "fisher")
 GO_MF_h4_resultFisherclassic<-runTest(GO_MF_h4,algorithm = "classic", statistic = "fisher")
-GO_MF_h4_resultclassicKS <- runTest(GO_MF_h4, algorithm = "classic", statistic = "ks")
-GO_MF_h4_resultelimKS <- runTest(GO_MF_h4, algorithm = "elim", statistic = "ks")
-
 
 #generate results table
-GO_MF_h4_resultstable<-GenTable(GO_MF_h4, 
-                                Fisher01 = GO_MF_h4_resultFisher01,
+GO_MF_h4_resultstable<-GenTable(GO_MF_h4,
                                 Fisherclassic = GO_MF_h4_resultFisherclassic,
-                                classicKS = GO_MF_h4_resultclassicKS,
-                                elimKS = GO_MF_h4_resultelimKS,
                                 topNodes = 50)
 
-showSigOfNodes(GO_MF_h4,score(GO_MF_h4_resultelimKS),firstSigNodes = 5,useInfo = 'all')
+showSigOfNodes(GO_MF_h4,score(GO_MF_h4_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
 GO_MF_h4_resultstable %>% filter(Significant >= 1) %>% mutate(hour=4)-> sigGO_MF_h4 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+## splitting up- and down-regulated genes based on log2fold change for hour 4
+
+### Up-regulated genes in hour 4
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_GO_h4_up <- as.data.frame(res_h4) %>%
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange > 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+
+res_GO_h4_up %>% filter(Group == "1") #19 genes
+
+#create the gene universe
+gene_universe_h4_up <-as.numeric(res_GO_h4_up$Group)
+length(gene_universe_h4_up) #18591 genes
+gene_universe_h4_up <-factor(gene_universe_h4_up)
+names(gene_universe_h4_up) <- rownames(res_GO_h4_up) 
+
+#create topGO data object
+GO_MF_h4_up <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h4_up,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h4_up_resultFisherclassic<-runTest(GO_MF_h4_up,algorithm = "classic", statistic = "fisher")
+
+#generate results table
+GO_MF_h4_up_resultstable<-GenTable(GO_MF_h4_up,
+                                Fisherclassic = GO_MF_h4_up_resultFisherclassic,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h4_up,score(GO_MF_h4_up_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h4_up_resultstable %>% 
+  filter(Significant >= 1) %>% 
+  mutate(hour=4) %>% 
+  mutate(regulation_direction = "Up") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h4_up #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+```
+
+### Down-regulated genes in hour 4
+```{r}
+#label differentially expressed genes as '1' and non-significant genes as '0'
+res_GO_h4_down <- as.data.frame(res_h4) %>%
+  drop_na(padj) %>% 
+  mutate(Group=case_when(padj<0.05 & log2FoldChange < 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+
+res_GO_h4_down %>% filter(Group == "1") #27 genes
+
+#create the gene universe
+gene_universe_h4_down <-as.numeric(res_GO_h4_down$Group)
+length(gene_universe_h4_down) #18591 genes
+gene_universe_h4_down <-factor(gene_universe_h4_down)
+names(gene_universe_h4_down) <- rownames(res_GO_h4_down) 
+
+#create topGO data object
+GO_MF_h4_down <-new("topGOdata",
+                ontology="MF",
+                allGenes=gene_universe_h4_down,
+                nodeSize=10,
+                annotationFun=annFUN.gene2GO,
+                gene2GO = geneID_GO)
+
+# tests to identify enriched gene ontology terms
+GO_MF_h4_down_resultFisherclassic<-runTest(GO_MF_h4_down,algorithm = "classic", statistic = "fisher")
+
+#generate results table
+GO_MF_h4_down_resultstable<-GenTable(GO_MF_h4_down,
+                                Fisherclassic = GO_MF_h4_down_resultFisherclassic,
+                                topNodes = 50)
+
+showSigOfNodes(GO_MF_h4_down,score(GO_MF_h4_down_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+
+GO_MF_h4_down_resultstable %>% 
+  filter(Significant >= 1) %>% 
+  mutate(hour=4) %>% 
+  mutate(regulation_direction = "down") %>% 
+  dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
+  filter(Fisherclassic < 0.05) -> sigGO_MF_h4_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
 
 

@@ -16,6 +16,7 @@ This markdown is for the Gene Ontology (GO) enrichment analysis using the packag
 #BiocManager::install("DESeq2")
 
 library(tidyverse) 
+library(DESeq2)
 library(topGO) # needs BiocManager
 library(GO.db) # needs BiocManager
 library(Rgraphviz) # needs BiocManager
@@ -64,7 +65,7 @@ Hour 0 had no annotations so no GO analysis
 ```{r}
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_h1_GO<-as.data.frame(res_h1)
-res_h1_GO<- res_h1_GO%>%mutate(Group=case_when(padj<0.05~"1",padj>=0.05~"0"))
+res_h1_GO<- res_h1_GO%>%mutate(Group=case_when(padj<0.05~"1",padj>=0.05~"0")) 
 res_h1_GO<-na.omit(res_h1_GO)
 
 #create the gene universe
@@ -100,7 +101,7 @@ GO_MF_h1_resultstable %>% filter(Significant >= 1) %>% mutate(hour=1)-> sigGO_MF
 #label differentially expressed genes as '1' and non-significant genes as '0'
 res_GO_h1_up <- as.data.frame(res_h1) %>%
   drop_na(padj) %>% 
-  mutate(Group=case_when(padj<0.05 & log2FoldChange > 0 ~"1", TRUE ~ "0")) #selecting log2fold change level of 0
+  mutate(Group=case_when(padj<0.05 & log2FoldChange > 0 ~"1", TRUE ~ "0")) #going to try doing log2FC of 2 instead of 0 to see if we get more specific GO terms
 
 res_GO_h1_up %>% filter(Group == "1") #26 genes
 
@@ -424,6 +425,14 @@ full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%  #144 GO t
   filter(Fisherclassic < 0.05) #25 GO terms now
   #write_csv("GO_MF_allhours.csv")
 
+listOfDataFrames <- list(sigGO_MF_h1_up, sigGO_MF_h1_down, sigGO_MF_h2_up, sigGO_MF_h2_down, sigGO_MF_h4_up, sigGO_MF_h4_down)
+
+GO_MF_allhours_UpvsDown <- do.call("rbind",listOfDataFrames) 
+GO_MF_allhours_UpvsDown$Fisherclassic <- as.numeric(GO_MF_allhours_UpvsDown$Fisherclassic)
+GO_MF_allhours_UpvsDown$hour <- as.factor(GO_MF_allhours_UpvsDown$hour)
+
+#write_csv(GO_MF_allhours_UpvsDown, "../results/GO_MF_allhours_UpvsDown.csv")
+
 #dot plot
 full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%
   filter(Fisherclassic < 0.05) %>% 
@@ -453,5 +462,21 @@ full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%
   theme_bw() +
   facet_grid(vars(hour), scales = "free") + 
   scale_size(range = c(2,6))
+
+#now split it by Up and down regulated
+
+GO_MF_allhours_UpvsDown %>% 
+  mutate(GO_term=str_c(GO.ID,Term, sep=" ")) %>% 
+  ggplot(data=., aes(x=-log(Fisherclassic), y=reorder(GO_term, -Fisherclassic))) +
+    geom_point(aes(size=Significant, color=-log(Fisherclassic))) +
+    scale_color_viridis(option="plasma") +
+  labs(x="-log P-Value", y="Gene Ontology Term Description", title=paste("Significant Molecular Functions"), color = "-log(P-value)") +
+  scale_y_discrete(labels = function(x) str_wrap(x, width = 50)) +
+  theme_bw() +
+  facet_grid(vars(hour,regulation_direction), scales = "free") + 
+  scale_size(range = c(4,8))
+  
+
+
 ```
 

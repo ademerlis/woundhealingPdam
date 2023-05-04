@@ -1,0 +1,52 @@
+GO.ID,Term,Annotated,Significant,Expected,Fisherclassic,hour,regulation_direction
+GO:0042626,ATPase-coupled transmembrane transporter...,68,3,0.1,1.4e-4,1,Up
+GO:0015399,primary active transmembrane transporter...,87,3,0.13,2.9e-4,1,Up
+GO:0016887,ATP hydrolysis activity,107,3,0.16,5.3e-4,1,Up
+GO:0003824,catalytic activity,3540,12,5.43,6.7e-4,1,Up
+GO:0022804,active transmembrane transporter activit...,141,3,0.22,0.00117,1,Up
+GO:0005215,transporter activity,711,5,1.09,0.00324,1,Up
+GO:0140657,ATP-dependent activity,222,3,0.34,0.00428,1,Up
+GO:0008146,sulfotransferase activity,77,2,0.12,0.006,1,Up
+GO:0016782,"transferase activity, transferring sulph...",82,2,0.13,0.00678,1,Up
+GO:0017111,nucleoside-triphosphatase activity,283,3,0.43,0.00841,1,Up
+GO:0016462,pyrophosphatase activity,290,3,0.44,0.00899,1,Up
+GO:0016818,"hydrolase activity, acting on acid anhyd...",296,3,0.45,0.00951,1,Up
+GO:0016817,"hydrolase activity, acting on acid anhyd...",300,3,0.46,0.00986,1,Up
+GO:0022857,transmembrane transporter activity,616,4,0.94,0.01214,1,Up
+GO:0008476,protein-tyrosine sulfotransferase activi...,12,1,0.02,0.01825,1,Up
+GO:0016831,carboxy-lyase activity,20,1,0.03,0.03024,1,Up
+GO:0008484,sulfuric ester hydrolase activity,25,1,0.04,0.03766,1,Up
+GO:0016787,hydrolase activity,1337,5,2.05,0.0435,1,Up
+GO:0016830,carbon-carbon lyase activity,29,1,0.04,0.04356,1,Up
+GO:0051287,NAD binding,29,1,0.04,0.04356,1,Up
+GO:0016616,"oxidoreductase activity, acting on the C...",32,1,0.05,0.04797,1,Up
+GO:0004620,phospholipase activity,23,2,0.04,8.8e-4,1,down
+GO:0016298,lipase activity,26,2,0.05,0.00113,1,down
+GO:0005227,calcium activated cation channel activit...,12,1,0.02,0.02306,1,down
+GO:0008191,metalloendopeptidase inhibitor activity,12,1,0.02,0.02306,1,down
+GO:0022839,ion gated channel activity,12,1,0.02,0.02306,1,down
+GO:0004842,ubiquitin-protein transferase activity,77,1,0.02,0.02,2,Up
+GO:0019787,ubiquitin-like protein transferase activ...,80,1,0.02,0.021,2,Up
+GO:0016887,ATP hydrolysis activity,86,1,0.02,0.023,2,Up
+GO:0015103,inorganic anion transmembrane transporte...,20,1,0.01,0.013,2,down
+GO:0004601,peroxidase activity,21,1,0.01,0.014,2,down
+GO:0016684,"oxidoreductase activity, acting on perox...",24,1,0.02,0.016,2,down
+GO:0008509,anion transmembrane transporter activity,29,1,0.02,0.019,2,down
+GO:0016209,antioxidant activity,31,1,0.02,0.02,2,down
+GO:0015291,secondary active transmembrane transport...,43,1,0.03,0.028,2,down
+GO:0022853,active ion transmembrane transporter act...,57,1,0.04,0.037,2,down
+GO:0015103,inorganic anion transmembrane transporte...,21,1,0.02,0.024,4,Up
+GO:0004601,peroxidase activity,26,1,0.03,0.029,4,Up
+GO:0016684,"oxidoreductase activity, acting on perox...",29,1,0.03,0.032,4,Up
+GO:0008509,anion transmembrane transporter activity,31,1,0.04,0.035,4,Up
+GO:0016209,antioxidant activity,37,1,0.04,0.041,4,Up
+GO:0005319,lipid transporter activity,12,1,0.01,0.0098,4,down
+GO:0004601,peroxidase activity,26,1,0.02,0.0212,4,down
+GO:0016684,"oxidoreductase activity, acting on perox...",29,1,0.02,0.0236,4,down
+GO:0016879,"ligase activity, forming carbon-nitrogen...",29,1,0.02,0.0236,4,down
+GO:0003712,transcription coregulator activity,35,1,0.03,0.0285,4,down
+GO:0003824,catalytic activity,3514,6,2.89,0.0299,4,down
+GO:0008080,N-acetyltransferase activity,37,1,0.03,0.0301,4,down
+GO:0016209,antioxidant activity,37,1,0.03,0.0301,4,down
+GO:0016407,acetyltransferase activity,39,1,0.03,0.0317,4,down
+GO:0016410,N-acyltransferase activity,39,1,0.03,0.0317,4,down

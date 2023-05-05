@@ -70,51 +70,43 @@ pca_0 = ggplot(pca12_0, aes(PC1,PC2,shape=condition,color=condition)) +
   xlab(paste0("PC1 (49%)")) +
   ylab(paste0("PC2 (24%)")) +
   theme(legend.position="right")  + 
-  theme(text = element_text(size=12))  + 
-  theme(legend.key.size = unit(0.5, "cm")) + 
-  theme(legend.title=element_text(size=12)) +
-  scale_shape_discrete(name="Condition") +
-  scale_color_discrete(name="Condition") +
-  theme_classic(base_size=12,base_family="serif")
+  theme_classic() +
+  geom_polygon(mapping = aes(fill = condition), alpha = 0.5) +
+  scale_color_manual(values = c("lightskyblue2", "salmon1")) +
+  scale_fill_manual(values = c("lightskyblue2", "salmon1"))
 
 pca12_1 <- plotPCA(dds_vst1,intgroup=c("condition"),returnData = TRUE)
 pca_1 = ggplot(pca12_1, aes(PC1, PC2,shape=condition,color=condition)) + 
   geom_point(size=3) + 
   xlab(paste0("PC1 (38%)")) +
   ylab(paste0("PC2 (23%)")) +
-  theme(legend.position="right")  + 
-  theme(text = element_text(size=12)) + 
-  theme(legend.key.size = unit(0.5, "cm")) + 
-  theme(legend.title=element_text(size=12)) +
-  scale_shape_discrete(name="Condition") +
-  scale_color_discrete(name="Condition") +
-  theme_classic(base_size=12,base_family="serif")
+  theme(legend.position="right") +
+  theme_classic() +
+  geom_polygon(mapping = aes(fill = condition), alpha = 0.5) +
+  scale_color_manual(values = c("lightskyblue2", "salmon1")) +
+  scale_fill_manual(values = c("lightskyblue2", "salmon1"))
 
 pca12_2 <- plotPCA(dds_vst2,intgroup=c("condition"),returnData = TRUE)
 pca_2 = ggplot(pca12_2, aes(PC1, PC2,shape=condition,color=condition)) + 
   geom_point(size=3) +   
   xlab(paste0("PC1 (35%)")) +
   ylab(paste0("PC2 (29%)")) +
-  theme(legend.position="right")  + 
-  theme(text = element_text(size=12)) + 
-  theme(legend.key.size = unit(0.5, "cm")) + 
-  theme(legend.title=element_text(size=12)) +
-  scale_shape_discrete(name="Condition") +
-  scale_color_discrete(name="Condition") +
-  theme_classic(base_size=12,base_family="serif")
+  theme(legend.position="right") +
+  theme_classic() +
+  geom_polygon(mapping = aes(fill = condition), alpha = 0.5)+
+  scale_color_manual(values = c("lightskyblue2", "salmon1")) +
+  scale_fill_manual(values = c("lightskyblue2", "salmon1"))
 
 pca12_4 <- plotPCA(dds_vst4,intgroup=c("condition"),returnData = TRUE)
 pca_4 = ggplot(pca12_4, aes(PC1, PC2,shape=condition,color=condition)) + 
   geom_point(size=3) +  
   xlab(paste0("PC1 (56%)")) +
   ylab(paste0("PC2 (21%)")) +
-  theme(legend.position="right")  + 
-  theme(text = element_text(size=12))  + 
-  theme(legend.key.size = unit(0.5, "cm")) + 
-  theme(legend.title=element_text(size=12)) +
-  scale_shape_discrete(name="Condition") +
-  scale_color_discrete(name="Condition") +
-  theme_classic(base_size=12,base_family="serif")
+  theme(legend.position="right") +
+  theme_classic() +
+  geom_polygon(mapping = aes(fill = condition), alpha = 0.5)+
+  scale_color_manual(values = c("lightskyblue2", "salmon1")) +
+  scale_fill_manual(values = c("lightskyblue2", "salmon1"))
 
 pca_combined<-ggarrange(pca_0,pca_1,pca_2,pca_4,
           common.legend = TRUE,

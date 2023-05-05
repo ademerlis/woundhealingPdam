@@ -122,6 +122,8 @@ pca_combined
 # PERMANOVAs
 ## for hour 0
 ```{r}
+#got this code from Kevin Wong's Physiology Analysis html
+
 #we use the dds object instead of the original countdata_0 matrix because this has filtered out genes with low counts (<10)
 hour0_countsmatrix <- assay(dds_0)
 t(hour0_countsmatrix) -> hour0_countsmatrix 

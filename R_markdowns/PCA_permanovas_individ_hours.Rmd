@@ -115,7 +115,6 @@ pca_combined<-ggarrange(pca_0,pca_1,pca_2,pca_4,
           ncol=2,nrow=2)
 
 pca_combined
-#brought this figure into Illustrator to edit colors and formatting
 ```
 
 

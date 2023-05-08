@@ -76,6 +76,13 @@ grid.draw(DGE_hour_venn) #run lines 73-74 together
 ```
 
 
+# Venn Diagrams for GO terms at each hour (MF)
+```{r}
+#import GO term table
+GO_results <- read.csv("../results/GO_MF_allhours_UpvsDown.csv")
 
-
-
+GO_results %>% 
+  group_by(GO.ID, hour, regulation_direction) %>% 
+  summarise(count = n())
+#there's only one GO term per interaction, even when regulation direction is removed, so this wouldn't be a meaningful analysis
+```

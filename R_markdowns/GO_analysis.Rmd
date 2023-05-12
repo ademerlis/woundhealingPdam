@@ -202,6 +202,9 @@ GO_MF_h1_resultstable<-GenTable(GO_MF_h1,
 showSigOfNodes(GO_MF_h1,score(GO_MF_h1_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
 GO_MF_h1_resultstable %>% filter(Significant >= 1) %>% mutate(hour=1)-> sigGO_MF_h1 #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+
+length(sigGenes((GO_MF_h1))) #34 genes
+
 ```
 
 splitting up- and down-regulated genes based on log2fold change for hour 1
@@ -232,6 +235,23 @@ GO_MF_h1_up_resultstable %>%
   mutate(regulation_direction = "Up") %>% 
   dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
   filter(Fisherclassic < 0.05) -> sigGO_MF_h1_up #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+
+length(sigGenes(GO_MF_h1_up)) #15 genes
+
+GOterms_MF_h1_up <- sigGO_MF_h1_up %>% dplyr::select(GO.ID) %>% distinct()
+
+GOterms_MF_h1_up <- c("GO:0042626", "GO:0015399", "GO:0016887", "GO:0003824", "GO:0022804", "GO:0005215", "GO:0140657", "GO:0008146", "GO:0016782", "GO:0017111", "GO:0016462", "GO:0016818", "GO:0016817", "GO:0022857", "GO:0008476", "GO:0016831", "GO:0008484", "GO:0016787", "GO:0016830", "GO:0051287", "GO:0016616")
+
+genes_MF_h1_up <- genesInTerm(GO_MF_h1_up, GOterms_MF_h1_up)
+
+for (i in 1:length(GOterms_MF_h1_up))
+   {
+       GOterms_MF_h1_up <- GOterms_MF_h1_up[i]
+       mygenesforterm <- genes_MF_h1_up[GOterms_MF_h1_up][[1]]
+       mygenesforterm <- paste(mygenesforterm, collapse=',')
+       print(paste("Term",GOterms_MF_h1_up,"genes:",mygenesforterm))
+     }
+
 ```
 
 
@@ -431,6 +451,7 @@ GO_MF_h4_down_resultstable %>%
 ```
 
 
+
 ## dot plot figure of all GO terms each hour up and down
 ```{r}
 full_join(sigGO_MF_h1, sigGO_MF_h2) %>% full_join(., sigGO_MF_h4) %>%  #144 GO terms total
@@ -590,5 +611,7 @@ GO_MF_h1_down_resultstable %>%
   dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
   filter(Fisherclassic < 0.05) -> sigGO_MF_h1_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
+
+
 
 # Cellular Component (CC)

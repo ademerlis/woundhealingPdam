@@ -195,3 +195,4 @@ vegan_h4 <- scale(PCA.h4.countsdata[c(5:19773)]) #we just want to scale the gene
 permanova_h4 <-adonis2(vegan_h4 ~ condition, data = PCA.h4.countsdata, method='eu', na.rm=TRUE, nperm = 999)
 permanova_h4 #not significant
 ```
+

@@ -52,8 +52,8 @@ mutate(hour = as.numeric(as.character(hour))) %>%
   geom_point() + stat_summary(fun.y=mean, geom="line") +
   scale_y_log10() + 
   theme_classic() +
-  scale_color_manual(values = c("lightblue", "orange")) +
-  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00001007")
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="Galectin-3-binding protein B (pdam_00001007)") #looked at list of annotated genes for this info
 ```
 
 # Wald tests for log2fold changes at individual time points

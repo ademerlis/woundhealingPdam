@@ -588,28 +588,28 @@ names(gene_universe_h1_down) <- rownames(res_GO_h1_down)
 
 #create topGO data object
 GO_MF_h1_down <-new("topGOdata",
-                ontology="MF",
+                ontology="BP",
                 allGenes=gene_universe_h1_down,
                 nodeSize=10,
                 annotationFun=annFUN.gene2GO,
                 gene2GO = geneID_GO)
 
 # tests to identify enriched gene ontology terms
-GO_MF_h1_down_resultFisherclassic<-runTest(GO_MF_h1_down,algorithm = "classic", statistic = "fisher")
+GO_BP_h1_down_resultFisherclassic<-runTest(GO_BP_h1_down,algorithm = "classic", statistic = "fisher")
 
 #generate results table
-GO_MF_h1_down_resultstable<-GenTable(GO_MF_h1_down,
-                                Fisherclassic = GO_MF_h1_down_resultFisherclassic,
+GO_BP_h1_down_resultstable<-GenTable(GO_BP_h1_down,
+                                Fisherclassic = GO_BP_h1_down_resultFisherclassic,
                                 topNodes = 50)
 
-showSigOfNodes(GO_MF_h1_down,score(GO_MF_h1_down_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
+showSigOfNodes(GO_BP_h1_down,score(GO_BP_h1_down_resultFisherclassic),firstSigNodes = 5,useInfo = 'all')
 
-GO_MF_h1_down_resultstable %>% 
+GO_BP_h1_down_resultstable %>% 
   filter(Significant >= 1) %>% 
   mutate(hour=1) %>% 
   mutate(regulation_direction = "down") %>% 
   dplyr::select(GO.ID:Fisherclassic, hour, regulation_direction) %>% 
-  filter(Fisherclassic < 0.05) -> sigGO_MF_h1_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
+  filter(Fisherclassic < 0.05) -> sigGO_BP_h1_down #filter for genes from this time point that are significantly associated with the GO terms (which are also significantly enriched)
 ```
 
 

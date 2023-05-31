@@ -82,10 +82,10 @@ mutate(hour = as.numeric(as.character(hour))) %>%
   geom_point() + stat_summary(fun.y=mean, geom="line") +
   scale_y_log10() + 
   theme_classic() +
-  scale_color_manual(values = c("lightblue", "orange")) +
-  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00008890")
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="aceA: Isocitrate lyase (pdam_00008890)") #aceA: Isocitrate lyase (from Pdam_Gene_Names_Info.csv)
 
-plotCounts(ddsLRT, gene = "pdam_00004156", 
+plotCounts(dds_LRT, gene = "pdam_00004156", 
                    intgroup = c("hour","condition"), returnData = TRUE) %>% 
 mutate(hour = as.numeric(as.character(hour))) %>% 
   ggplot(.,
@@ -93,9 +93,59 @@ mutate(hour = as.numeric(as.character(hour))) %>%
   geom_point() + stat_summary(fun.y=mean, geom="line") +
   scale_y_log10() + 
   theme_classic() +
-  scale_color_manual(values = c("lightblue", "orange")) +
-  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00004156")
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="Gene pdam_00004156 (unknown function)") #unknown function of gene
 ```
+
+# look at Peroxidasin homolog specifically to see its expression pattern
+```{r}
+plotCounts(dds_LRT, gene = "pdam_00000345", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="PXDN: Peroxidasin homolog (pdam_00000345)")
+
+plotCounts(dds_LRT, gene = "pdam_00000346", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="PXDN: Peroxidasin homolog (pdam_00000346)")
+
+plotCounts(dds_LRT, gene = "pdam_00000349", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="PXDN: Peroxidasin homolog (pdam_00000349)")
+```
+# look at matrix metalloproteinase
+```{r}
+plotCounts(dds_LRT, gene = "pdam_00003559", 
+                   intgroup = c("hour","condition"), returnData = TRUE) %>% 
+mutate(hour = as.numeric(as.character(hour))) %>% 
+  ggplot(.,
+  aes(x = hour, y = count, color = condition, group = condition)) + 
+  geom_point() + stat_summary(fun.y=mean, geom="line") +
+  scale_y_log10() + 
+  theme_classic() +
+  scale_color_manual(values = c("lightblue", "red")) +
+  labs(x="Hour", y="Normalized counts", title ="MMP16: Matrix metalloproteinase-16 (pdam_00003559)")
+```
+
 
 # use LFC to cluster significant genes by their profiles
 ```{r}

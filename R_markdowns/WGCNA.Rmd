@@ -1,0 +1,55 @@
+---
+title: "WGCNA"
+author: "allyson_demerlis"
+date: "2023-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(WGCNA) #install using BiocManager
+library(tidyverse)
+
+#The following setting is important, do not omit. 
+options(stringsAsFactors=FALSE)
+
+#read in dataset (rows = genes, columns = samples)
+
+countsmatrix <-read.table("../input_files/WH_Pdam_original.Rmatrix.txt",header=TRUE)
+
+#cleanup and remove auxilary info from table
+countsmatrix <-countsmatrix %>% 
+  dplyr::select(-c("Chr", "Start", "End", "Strand", "Length")) %>% 
+  column_to_rownames("Geneid")
+
+#removing hour 5 from the dataset because it only has 1 wounded coral, so it is not comparable 
+countsmatrix <- countsmatrix %>% 
+  dplyr::select(!X5331C1:X5335Y)
+
+#function found from stack overflow
+#tidying column names so they don't include an X anymore (R puts an X in front of columns that start with numbers)
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(countsmatrix)
+
+#code from WGCNA tutorial to transpose dataset
+
+countsmatrix = as.data.frame(t(countsmatrix))
+```
+
+Checking for excessive missing values and identifying outliers
+```{r}
+gsg = WGCNA::goodSamplesGenes(countsmatrix, verbose = 3)
+
+
+```
+
+
+

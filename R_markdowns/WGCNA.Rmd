@@ -41,14 +41,64 @@ destroyX(countsmatrix)
 
 #code from WGCNA tutorial to transpose dataset
 
-countsmatrix = as.data.frame(t(countsmatrix))
+countsmatrix_transposed = as.data.frame(t(countsmatrix))
 ```
 
 Checking for excessive missing values and identifying outliers
 ```{r}
-gsg = WGCNA::goodSamplesGenes(countsmatrix, verbose = 3)
+gsg = WGCNA::goodSamplesGenes #Excluded 3209 genes from the calculation due to too many missing samples or zero variance.
 
+gsg$allOK #FALSE = not all genes passed the cuts
 
+if(!gsg$allOK) { #Optionally,printthegeneandsamplenamesthatwereremoved: 
+  if(sum(!gsg$goodGenes)>0) 
+    printFlush(paste("Removinggenes:",paste(names(countsmatrix_transposed)[!gsg$goodGenes],collapse=","))); 
+  if(sum(!gsg$goodSamples)>0) 
+      printFlush(paste("Removingsamples:",paste(rownames(countsmatrix_transposed)[!gsg$goodSamples],collapse=","))); #Removetheoffendinggenesandsamplesfromthedata: 
+  
+  countsmatrix_nooutliers=countsmatrix_transposed[gsg$goodSamples,gsg$goodGenes] }
+```
+
+Initial sample clustering to see if there are any visible outliers still
+```{r}
+sampleTree = hclust(dist(countsmatrix_nooutliers), method = "average");
+sizeGrWindow(12,9)
+par(cex=0.6);
+par(mar=c(0,4,2,0)) 
+plot(sampleTree,main="Sample clustering to detect outliers",sub="",xlab="",cex.lab=1.5, cex.axis=1.5,cex.main=2)
+
+#appears that sample 4326C2 is an outlier. 
+
+abline(h=150000, col = "red")
+
+#Determine cluster under the line
+clust=cutreeStatic(sampleTree,cutHeight=150000,minSize=10) 
+table(clust) 
+keepSamples=(clust==1) 
+countsmatrix_nooutliers=countsmatrix_nooutliers[keepSamples,] 
+nGenes=ncol(countsmatrix_nooutliers)
+nSamples=nrow(countsmatrix_nooutliers)
+```
+
+Create metadata file for samples
+```{r}
+metadata = data.frame(sample=colnames(countsmatrix),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countsmatrix)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countsmatrix)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countsmatrix)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata$condition[str_detect(metadata$condition,"TRUE")] <- "Control"
+metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
+
+metadata <- metadata %>% column_to_rownames("sample")
+
+metadata$condition <- as.factor(metadata$condition)
+
+#remove 4326C2 because it got filtered out in initial sample clustering
+
+metadata %>% 
+  filter(!id=="326") -> metadata
 ```
 
 

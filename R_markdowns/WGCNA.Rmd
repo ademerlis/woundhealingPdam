@@ -8,98 +8,205 @@ output: html_document
 ```{r setup, include=FALSE}
 library(WGCNA) #install using BiocManager
 library(tidyverse)
+library(DESeq2)
 
 #The following setting is important, do not omit. 
 options(stringsAsFactors=FALSE)
+allowWGCNAThreads()
 
-#read in dataset (rows = genes, columns = samples)
+#read in dataset (needs to be a subset of original counts matrix - in SCTLD jamboree, we used a subset of the dds object so I'll follow that code:  https://github.com/ademerlis/sctld_jamboree/blob/master/my_code/sctld_mcav.Rmd)
 
-countsmatrix <-read.table("../input_files/WH_Pdam_original.Rmatrix.txt",header=TRUE)
+dds_LRT <- readRDS(file = "ddsLRT.rds")
+nrow(dds_LRT) #21267 genes
+keep_90 <- rowSums(counts(dds_LRT) >= 10) > (ncol(dds_LRT)*0.5)
+dds_LRT_wgcna <- dds_LRT[keep_90,]
+nrow(dds_LRT_wgcna) #16637 genes
 
-#cleanup and remove auxilary info from table
-countsmatrix <-countsmatrix %>% 
-  dplyr::select(-c("Chr", "Start", "End", "Strand", "Length")) %>% 
-  column_to_rownames("Geneid")
+#all these things are recommended in the WGCNA FAQ : https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/faq.html
 
-#removing hour 5 from the dataset because it only has 1 wounded coral, so it is not comparable 
-countsmatrix <- countsmatrix %>% 
-  dplyr::select(!X5331C1:X5335Y)
-
-#function found from stack overflow
-#tidying column names so they don't include an X anymore (R puts an X in front of columns that start with numbers)
-destroyX = function(es) {
-  f = es
-  for (col in c(1:ncol(f))){ #for each column in dataframe
-    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
-      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
-    }
-  }
-  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
-}
-
-destroyX(countsmatrix)
-
-#code from WGCNA tutorial to transpose dataset
-
-countsmatrix_transposed = as.data.frame(t(countsmatrix))
+#you need to normalize expression data for WGCNA using VST transformation
+vst_lrt_wgcna <- vst(dds_LRT_wgcna, blind = FALSE) #blind = FALSE because you want it to take into account the dds model
+countdata_vst_lrt_wgcna <- assay(vst_lrt_wgcna)
+datExpr_lrt <- t(countdata_vst_lrt_wgcna)
+dim(datExpr_lrt) #24 samples, 16,637 genes
 ```
 
 Checking for excessive missing values and identifying outliers
 ```{r}
-gsg = WGCNA::goodSamplesGenes #Excluded 3209 genes from the calculation due to too many missing samples or zero variance.
+gsg = WGCNA::goodSamplesGenes(datExpr_lrt, verbose = 3) #Excluded 3209 genes from the calculation due to too many missing samples or zero variance.
 
-gsg$allOK #FALSE = not all genes passed the cuts
-
-if(!gsg$allOK) { #Optionally,printthegeneandsamplenamesthatwereremoved: 
-  if(sum(!gsg$goodGenes)>0) 
-    printFlush(paste("Removinggenes:",paste(names(countsmatrix_transposed)[!gsg$goodGenes],collapse=","))); 
-  if(sum(!gsg$goodSamples)>0) 
-      printFlush(paste("Removingsamples:",paste(rownames(countsmatrix_transposed)[!gsg$goodSamples],collapse=","))); #Removetheoffendinggenesandsamplesfromthedata: 
-  
-  countsmatrix_nooutliers=countsmatrix_transposed[gsg$goodSamples,gsg$goodGenes] }
+gsg$allOK #TRUE = all genes passed the cuts
 ```
 
 Initial sample clustering to see if there are any visible outliers still
 ```{r}
-sampleTree = hclust(dist(countsmatrix_nooutliers), method = "average");
+sampleTree = hclust(dist(datExpr_lrt), method = "average");
 sizeGrWindow(12,9)
 par(cex=0.6);
 par(mar=c(0,4,2,0)) 
 plot(sampleTree,main="Sample clustering to detect outliers",sub="",xlab="",cex.lab=1.5, cex.axis=1.5,cex.main=2)
 
-#appears that sample 4326C2 is an outlier. 
-
-abline(h=150000, col = "red")
-
-#Determine cluster under the line
-clust=cutreeStatic(sampleTree,cutHeight=150000,minSize=10) 
-table(clust) 
-keepSamples=(clust==1) 
-countsmatrix_nooutliers=countsmatrix_nooutliers[keepSamples,] 
-nGenes=ncol(countsmatrix_nooutliers)
-nSamples=nrow(countsmatrix_nooutliers)
+#no obvious outliers in this dendrogram
 ```
 
 Create metadata file for samples
 ```{r}
-metadata = data.frame(sample=colnames(countsmatrix),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countsmatrix)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countsmatrix)),
- id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countsmatrix)))
+metadata = data.frame(sample=colnames(countdata_vst_lrt_wgcna),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_vst_lrt_wgcna)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_vst_lrt_wgcna)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_vst_lrt_wgcna)))
 
 #changing TRUE and FALSE for condition to Control and Wounded
-metadata$condition[str_detect(metadata$condition,"TRUE")] <- "Control"
-metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
+metadata$condition[str_detect(metadata$condition,"TRUE")] <- "1"
+metadata$condition[str_detect(metadata$condition,"FALSE")] <- "0"
 
 metadata <- metadata %>% column_to_rownames("sample")
 
 metadata$condition <- as.factor(metadata$condition)
 
-#remove 4326C2 because it got filtered out in initial sample clustering
-
 metadata %>% 
-  filter(!id=="326") -> metadata
+  select(!id) %>% 
+  mutate(condition = as.numeric(condition)) %>%  #when i convert condition to numeric, it changed the values so control = 2 and wounded = 1
+  mutate(hour = as.numeric(hour)) -> metadata
+
+#this file didn't work in the below code for the dendrogram, and I think it's because the trait data has to be numerical. so remove the ID column and change condition to be binary (0 = wounded, 1 = control)
 ```
 
 
+See how the sample/treatment info clusters in the dendrogram
+```{r}
+sampleTree2 = hclust(dist(datExpr_lrt), method = "average")
+traitColors = numbers2colors(metadata, signed = FALSE) ; 
+plotDendroAndColors(sampleTree2, traitColors,
+                    groupLabels = names(metadata),
+                    main = "Sample dendrogram and trait heatmap")
+#white means low value, red means high value (euclidean distance?)
+```
+
+Choose soft-thresholding power
+```{r}
+powers=c(c(1:10),seq(from=12,to=20,by=2))
+
+#network topology analysis function to pick soft threshold
+sft=pickSoftThreshold(datExpr_lrt,powerVector=powers,verbose=5) #this takes a very long time, make sure you run allowWGCNAthreads() beforehand
+
+#plot results
+sizeGrWindow(9, 5)
+par(mfrow = c(1,2));
+cex1=0.9;
+#scale-free topology fit index as a function of the soft-thresholding power
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+                               xlab="Soft Threshold (power)", ylab = "Scale Free Topology Model Fit, signed R^2", type = "n", main = paste("Scale independence"));
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels = powers, cex=cex1, col="red")
+abline(h=0.8, col="red") #i think you just want the h cut-off to be as high as possible and still able to select a number
+#mean connectivity as a function of the soft-thresholding power
+plot(sft$fitIndices[,1],sft$fitIndices[,5], xlab="SoftThreshold(power)",ylab="MeanConnectivity",type="n", main=paste("Meanconnectivity"))
+text(sft$fitIndices[,1],sft$fitIndices[,5],labels=powers,cex=cex1,col="red")
+
+#based on these graphs, you pick the lowest red number (power) for which the scale-free topology index reaches the highest possible number (in this dataset 0.8 instead of 0.9 because it just doesn't reach that high for some reason - lack of homogeneity of samples perhaps?)
+
+#based on the intersection of the abline in line 135, power = 16
+```
+
+Co-expression similarity and adjacency, and Topological Overlap Matrix (TOM)
+```{r}
+#WARNING: this part takes hours
+
+softPower = 16;
+adjacency = adjacency(datExpr_lrt, power = softPower);
+#turn adjacency into topological overlap
+TOM=TOMsimilarity(adjacency);
+dissTOM = 1-TOM
+```
+Clustering using TOM
+```{r}
+geneTree = hclust(as.dist(dissTOM), method = "average");
+sizeGrWindow(12,9)
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity", labels = FALSE, hang = 0.04);
+
+```
+
+```{r}
+minModulesize = 30;
+#module identification using dynamic tree cut:
+dynamicMode = cutreeDynamic(dendro = geneTree, distM = dissTOM,
+                            deepSplit = 2, pamRespectsDendro = FALSE,
+                            minClusterSize = minModulesize)
+table(dynamicMode)
+```
+
+```{r}
+dynamicColors = labels2colors(dynamicMode)
+table(dynamicColors)
+sizeGrWindow(8,6)
+plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+```
+
+Merge modules whose expression profiles are very similar
+```{r}
+#Calculate eigengenes
+MEList = moduleEigengenes(datExpr_lrt, colors=dynamicColors)
+MEs = MEList$eigengenes
+#Calculate dissimilarity of module eigengenes
+MEDiss = 1-cor(MEs);
+METree = hclust(as.dist(MEDiss), method = "average");
+
+sizeGrWindow(7,6)
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+MEDissThres = 0.25
+abline(h=MEDissThres, col = "red")
+merge = mergeCloseModules(datExpr_lrt, dynamicColors, cutHeight = MEDissThres, verbose = 3)
+mergedColors = merge$colors;
+mergedMEs=merge$newMEs;
+sizeGrWindow(12,9)
+plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+                    c("Dynamic Tree Cut", "Merged dynamic"),
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide=TRUE, guideHang = 0.05)
+
+moduleColors = mergedColors
+colorOrder = c("grey", standardColors(50));
+moduleLabels = match(moduleColors, colorOrder)-1;
+MEs=mergedMEs
+
+#save files so you don't have to run TOM again
+save(MEs, moduleLabels, moduleColors, geneTree, file = "WGCNAnetworkconstruction.RData")
+```
+
+
+Quantifying module-trait associations
+```{r}
+nGenes = ncol(datExpr_lrt)
+nSamples = nrow(datExpr_lrt)
+MEs0 = moduleEigengenes(datExpr_lrt, moduleColors)$eigengenes
+MEs = orderMEs(MEs0)
+moduleTraitCor = cor(MEs, metadata, use = "p")
+moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
+
+sizeGrWindow(10,6)
+textMatrix = paste(signif(moduleTraitCor, 2), "\n(",
+                   signif(moduleTraitPvalue, 1), ")", sep = "")
+dim(textMatrix) = dim(moduleTraitCor)
+par(mar=c(6,8.5,3,3));
+labeledHeatmap(Matrix=moduleTraitCor, 
+               xLabels=names(metadata), 
+               yLabels=names(MEs), 
+               ySymbols=names(MEs), 
+               colorLabels=FALSE, 
+               colors=greenWhiteRed(50), 
+               textMatrix=textMatrix, 
+               setStdMargins=FALSE, 
+               cex.text=0.5, 
+               zlim=c(-1,1),
+               main=paste("Module-traitrelationships"))
+```
+
+Gene relationship to condition and important modules
+```{r}
+
+```
 

@@ -52,39 +52,6 @@ plot(sampleTree,main="Sample clustering to detect outliers",sub="",xlab="",cex.l
 #no obvious outliers in this dendrogram
 ```
 
-Create metadata file for samples
-```{r}
-metadata = data.frame(sample=colnames(countdata_vst_lrt_wgcna),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_vst_lrt_wgcna)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_vst_lrt_wgcna)),
- id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_vst_lrt_wgcna)))
-
-#changing TRUE and FALSE for condition to Control and Wounded
-metadata$condition[str_detect(metadata$condition,"TRUE")] <- "1"
-metadata$condition[str_detect(metadata$condition,"FALSE")] <- "0"
-
-metadata <- metadata %>% column_to_rownames("sample")
-
-metadata$condition <- as.factor(metadata$condition)
-
-metadata %>% 
-  select(!id) %>% 
-  mutate(condition = as.numeric(condition)) %>%  #when i convert condition to numeric, it changed the values so control = 2 and wounded = 1
-  mutate(hour = as.numeric(hour)) -> metadata
-
-#this file didn't work in the below code for the dendrogram, and I think it's because the trait data has to be numerical. so remove the ID column and change condition to be binary (0 = wounded, 1 = control)
-```
-
-
-See how the sample/treatment info clusters in the dendrogram
-```{r}
-sampleTree2 = hclust(dist(datExpr_lrt), method = "average")
-traitColors = numbers2colors(metadata, signed = FALSE) ; 
-plotDendroAndColors(sampleTree2, traitColors,
-                    groupLabels = names(metadata),
-                    main = "Sample dendrogram and trait heatmap")
-#white means low value, red means high value (euclidean distance?)
-```
 
 Choose soft-thresholding power
 ```{r}
@@ -118,12 +85,11 @@ Co-expression similarity and adjacency, and Topological Overlap Matrix (TOM)
 softPower = 16;
 adjacency = adjacency(datExpr_lrt, 
                       corFnc = "bicor", #midweight bi-correlation (more robust to outliers than pearson correlation)
-                     maxPOutliers = 0.05, #recommended when bicor is used, this is recommended if there is a binary variable used (i.e. disease status or genotype). this argument forces bicor to never regard more than the specified proportion of samples as outliers
                        power = softPower,
                       type = "signed"); #signed means it knows down vs. upregulation, which is more biologically relevant
 #turn adjacency into topological overlap
 TOM=TOMsimilarity(adjacency,
-                  TOMtype = "signed",
+                  TOMType = "signed",
                   verbose = 5);
 dissTOM = 1-TOM #TOM is a measure of similarity, but for clustering you want to see the dissimilarity
 rm(adjacency) #clear up vector memory 
@@ -135,7 +101,6 @@ Clustering using TOM
 geneTree = hclust(as.dist(dissTOM), method = "average");
 sizeGrWindow(12,9)
 plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity", labels = FALSE, hang = 0.04);
-
 ```
 
 
@@ -202,16 +167,16 @@ MEs0 = orderMEs(MEs0)
 #the following code I got from here: https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0
 
 module_order = names(MEs0) %>% gsub("ME","", .)
-MEs0$treatment = row.names(MEs0)
+MEs0$samples = row.names(MEs0)
 
 mME = MEs0 %>%
-  pivot_longer(-treatment) %>%
+  pivot_longer(-samples) %>%
   mutate(
     name = gsub("ME", "", name),
     name = factor(name, levels = module_order)
   )
 
-mME %>% ggplot(., aes(x=treatment, y=name, fill=value)) +
+mME %>% ggplot(., aes(x=samples, y=name, fill=value)) +
   geom_tile() +
   theme_bw() +
   scale_fill_gradient2(
@@ -224,9 +189,16 @@ mME %>% ggplot(., aes(x=treatment, y=name, fill=value)) +
   labs(title = "Module-trait Relationships", y = "Modules", fill="corr")
 ```
 
+read in metadata file for correlating traits
+```{r}
+metadata <- read.csv("../input_files/metadata_forcorrWGCNA.csv")
+metadata <- column_to_rownames(metadata, var="sample")
+```
 
 
 ```{r}
+table(rownames(metadata) == rownames(datExpr_lrt)) #this needs to be TRUE
+
 moduleTraitCor = cor(MEs, metadata, use = "p")
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
 
@@ -247,11 +219,11 @@ labeledHeatmap(Matrix=moduleTraitCor,
                zlim=c(-1,1),
                main=paste("Module-trait relationships"))
 
-#For condition, the modules most positively correlated (red) are MEdarkgreen, MEbrown, and MEbrown4. The modules most negatively correlated (green) are MEsaddlebrown and MEdarkorange
+#The modules I want to focus on are the ones that are opposite colors for control vs. wounded within a time point.
 ```
 
-Gene relationship to trait of interest (condition) and important modules
 
+Gene relationship to trait of interest (condition) and important modules
 ```{r}
 condition = as.data.frame(metadata$condition);
 names(condition) = "condition" 

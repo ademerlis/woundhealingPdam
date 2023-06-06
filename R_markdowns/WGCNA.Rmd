@@ -13,14 +13,17 @@ library(DESeq2)
 #The following setting is important, do not omit. 
 options(stringsAsFactors=FALSE)
 allowWGCNAThreads()
+```
 
+## Attempt 1: Following traditional WGCNA tutorial with the DDS LRT object (all time points control vs. wounded)
+```{r}
 #read in dataset (needs to be a subset of original counts matrix - in SCTLD jamboree, we used a subset of the dds object so I'll follow that code:  https://github.com/ademerlis/sctld_jamboree/blob/master/my_code/sctld_mcav.Rmd)
 
 dds_LRT <- readRDS(file = "ddsLRT.rds")
 nrow(dds_LRT) #21267 genes
-keep_90 <- rowSums(counts(dds_LRT) >= 10) > (ncol(dds_LRT)*0.5)
-dds_LRT_wgcna <- dds_LRT[keep_90,]
-nrow(dds_LRT_wgcna) #16637 genes
+keep_98 <- rowSums(counts(dds_LRT) >= 10) > (ncol(dds_LRT)*0.98) #counts over 10 in 98% of samples
+dds_LRT_wgcna <- dds_LRT[keep_98,]
+nrow(dds_LRT_wgcna) #14224 genes
 
 #all these things are recommended in the WGCNA FAQ : https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/faq.html
 
@@ -28,12 +31,12 @@ nrow(dds_LRT_wgcna) #16637 genes
 vst_lrt_wgcna <- vst(dds_LRT_wgcna, blind = FALSE) #blind = FALSE because you want it to take into account the dds model
 countdata_vst_lrt_wgcna <- assay(vst_lrt_wgcna)
 datExpr_lrt <- t(countdata_vst_lrt_wgcna)
-dim(datExpr_lrt) #24 samples, 16,637 genes
+dim(datExpr_lrt) #24 samples, 14224 genes
 ```
 
 Checking for excessive missing values and identifying outliers
 ```{r}
-gsg = WGCNA::goodSamplesGenes(datExpr_lrt, verbose = 3) #Excluded 3209 genes from the calculation due to too many missing samples or zero variance.
+gsg = WGCNA::goodSamplesGenes(datExpr_lrt, verbose = 3)
 
 gsg$allOK #TRUE = all genes passed the cuts
 ```
@@ -100,7 +103,7 @@ plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
 text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2], labels = powers, cex=cex1, col="red")
 abline(h=0.8, col="red") #i think you just want the h cut-off to be as high as possible and still able to select a number
 #mean connectivity as a function of the soft-thresholding power
-plot(sft$fitIndices[,1],sft$fitIndices[,5], xlab="SoftThreshold(power)",ylab="MeanConnectivity",type="n", main=paste("Meanconnectivity"))
+plot(sft$fitIndices[,1],sft$fitIndices[,5], xlab="Soft Threshold (power)",ylab="Mean Connectivity",type="n", main=paste("Mean connectivity"))
 text(sft$fitIndices[,1],sft$fitIndices[,5],labels=powers,cex=cex1,col="red")
 
 #based on these graphs, you pick the lowest red number (power) for which the scale-free topology index reaches the highest possible number (in this dataset 0.8 instead of 0.9 because it just doesn't reach that high for some reason - lack of homogeneity of samples perhaps?)
@@ -113,11 +116,20 @@ Co-expression similarity and adjacency, and Topological Overlap Matrix (TOM)
 #WARNING: this part takes hours
 
 softPower = 16;
-adjacency = adjacency(datExpr_lrt, power = softPower);
+adjacency = adjacency(datExpr_lrt, 
+                      corFnc = "bicor", #midweight bi-correlation (more robust to outliers than pearson correlation)
+                     maxPOutliers = 0.05, #recommended when bicor is used, this is recommended if there is a binary variable used (i.e. disease status or genotype). this argument forces bicor to never regard more than the specified proportion of samples as outliers
+                       power = softPower,
+                      type = "signed"); #signed means it knows down vs. upregulation, which is more biologically relevant
 #turn adjacency into topological overlap
-TOM=TOMsimilarity(adjacency);
-dissTOM = 1-TOM
+TOM=TOMsimilarity(adjacency,
+                  TOMtype = "signed",
+                  verbose = 5);
+dissTOM = 1-TOM #TOM is a measure of similarity, but for clustering you want to see the dissimilarity
+rm(adjacency) #clear up vector memory 
 ```
+
+
 Clustering using TOM
 ```{r}
 geneTree = hclust(as.dist(dissTOM), method = "average");
@@ -125,6 +137,7 @@ sizeGrWindow(12,9)
 plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity", labels = FALSE, hang = 0.04);
 
 ```
+
 
 ```{r}
 minModulesize = 30;
@@ -134,6 +147,7 @@ dynamicMode = cutreeDynamic(dendro = geneTree, distM = dissTOM,
                             minClusterSize = minModulesize)
 table(dynamicMode)
 ```
+
 
 ```{r}
 dynamicColors = labels2colors(dynamicMode)
@@ -183,7 +197,36 @@ Quantifying module-trait associations
 nGenes = ncol(datExpr_lrt)
 nSamples = nrow(datExpr_lrt)
 MEs0 = moduleEigengenes(datExpr_lrt, moduleColors)$eigengenes
-MEs = orderMEs(MEs0)
+MEs0 = orderMEs(MEs0)
+
+#the following code I got from here: https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0
+
+module_order = names(MEs0) %>% gsub("ME","", .)
+MEs0$treatment = row.names(MEs0)
+
+mME = MEs0 %>%
+  pivot_longer(-treatment) %>%
+  mutate(
+    name = gsub("ME", "", name),
+    name = factor(name, levels = module_order)
+  )
+
+mME %>% ggplot(., aes(x=treatment, y=name, fill=value)) +
+  geom_tile() +
+  theme_bw() +
+  scale_fill_gradient2(
+    low = "blue",
+    high = "red",
+    mid = "white",
+    midpoint = 0,
+    limit = c(-1,1)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  labs(title = "Module-trait Relationships", y = "Modules", fill="corr")
+```
+
+
+
+```{r}
 moduleTraitCor = cor(MEs, metadata, use = "p")
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
 
@@ -202,11 +245,91 @@ labeledHeatmap(Matrix=moduleTraitCor,
                setStdMargins=FALSE, 
                cex.text=0.5, 
                zlim=c(-1,1),
-               main=paste("Module-traitrelationships"))
+               main=paste("Module-trait relationships"))
+
+#For condition, the modules most positively correlated (red) are MEdarkgreen, MEbrown, and MEbrown4. The modules most negatively correlated (green) are MEsaddlebrown and MEdarkorange
 ```
 
-Gene relationship to condition and important modules
+Gene relationship to trait of interest (condition) and important modules
+
 ```{r}
+condition = as.data.frame(metadata$condition);
+names(condition) = "condition" 
+#control = 2 and wounded = 1
 
+modNames = substring(names(MEs), 3)
+
+geneModuleMembership = as.data.frame(cor(datExpr_lrt, MEs, use = "p"));
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
+names(geneModuleMembership) = paste("MM", modNames, sep="");
+names(MMPvalue) = paste("p.MM", modNames, sep="");
+
+geneTraitSignificance = as.data.frame(cor(datExpr_lrt, condition, use = "p"));
+GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+
+names(geneTraitSignificance) = paste("GS.", names(condition), sep="");
+names(GSPvalue) = paste("p.GS.", names(condition), sep="")
 ```
 
+
+First module to look at for condition: MEdarkgreen
+```{r}
+module = "darkgreen"
+column = match(module, modNames);
+moduleGenes = moduleColors == module;
+
+sizeGrWindow(7,7);
+par(mfrow = c(1,1));
+verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+                   abs(geneTraitSignificance[moduleGenes, 1]),
+                   xlab = paste("Module Membership in", module, "module"),
+                   ylab = "Gene significance for condition",
+                   main = paste("Module membership vs. gene significance\n"),
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+
+#this is not significantly correlated at all 
+```
+
+
+second module to look at for condition: MEbrown
+```{r}
+module = "brown"
+column = match(module, modNames);
+moduleGenes = moduleColors == module;
+
+sizeGrWindow(7,7);
+par(mfrow = c(1,1));
+verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+                   abs(geneTraitSignificance[moduleGenes, 1]),
+                   xlab = paste("Module Membership in", module, "module"),
+                   ylab = "Gene significance for condition",
+                   main = paste("Module membership vs. gene significance\n"),
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+
+#this is not significantly correlated at all 
+```
+
+
+third module to look at for condition: MEbrown4
+```{r}
+module = "brown4"
+column = match(module, modNames);
+moduleGenes = moduleColors == module;
+
+sizeGrWindow(7,7);
+par(mfrow = c(1,1));
+verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+                   abs(geneTraitSignificance[moduleGenes, 1]),
+                   xlab = paste("Module Membership in", module, "module"),
+                   ylab = "Gene significance for condition",
+                   main = paste("Module membership vs. gene significance\n"),
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+
+#this is not significantly correlated at all 
+```
+
+
+
+
+
+## Attempt 2: 

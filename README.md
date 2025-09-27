@@ -14,10 +14,10 @@ This repository contains the scripts for the bioinformatics pipeline used to pro
 
 ### Contents:
 
+#### 0_input_files:
+
 #### 1_Bioinformatics:
 * This folder contains the bash scripts for running the following pipeline on UM's HPC, Pegasus: FastQC -> Trimmomatic -> STAR -> FeatureCounts
-
-#### input_files:
 
 #### 2_R_markdowns:
 

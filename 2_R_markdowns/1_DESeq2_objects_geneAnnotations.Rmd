@@ -1,0 +1,337 @@
+---
+title: "DESeq2_objects_geneAnnotations"
+author: "allyson_demerlis"
+date: "2023-03-21"
+output: html_document
+---
+
+This Rmarkdown involves cleaning the counts matrix, creating the metadata files, and creating the DDS objects for the full time-series model (Likelihood Ratio Test = LRT), as well as DDS objects for each hour separated (to look at comparisons within each time point). Significant DGE lists were then annotated using the Pdam genome .gff file. 
+
+Note: DDS objects are saved here as .rds files, and then these are imported into all subsequent Rmarkdown files.
+
+# Install and load necessary packages
+```{r, install/load packages}
+#if you need to install all the packages, you need the package "BiocManager" first.
+# if (!require("BiocManager",quietly=TRUE))
+#   install.packages("BiocManager")
+#Now you can use BiocManager to install pacakges like DESeq2
+#BiocManager::install("DEGreport")
+
+library(DESeq2)
+
+library(DEGreport) # needs BiocManager
+  #DEGreport requires lasso2, which is not available for newer versions of R. To install lasso2, run library(remotes) (might need to install that package first), then run:
+#install_version("lasso2", "1.2-22")
+
+library(tidyverse) 
+```
+
+
+# Importing gene counts matrix and formatting it
+```{r}
+#reading in txt file as a table with the headers as the header in the original file
+countsmatrix <-read.table("../0_input_files/WH_Pdam_original.Rmatrix.txt",header=TRUE)
+
+#removing the Chromosome column from the dataset, and changing the rows to be the gene names
+countsmatrix <-countsmatrix %>% 
+  dplyr::select(-c("Chr", "Start", "End", "Strand", "Length")) %>% 
+  column_to_rownames("Geneid")
+
+#removing hour 5 from the dataset because it only has 1 wounded coral, so it is not comparable 
+countsmatrix <- countsmatrix %>% 
+  dplyr::select(!X5331C1:X5335Y)
+
+#function found from stack overflow
+#tidying column names so they don't include an X anymore (R puts an X in front of columns that start with numbers)
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(countsmatrix)
+```
+
+
+# Import gene feature annotation information
+```{r}
+genefeatures <- read.delim(file = "../0_input_files/pdam_genome_IDInfo.gff", header = F)
+head(genefeatures)
+colnames(genefeatures) <- c("IDGeneInfo")
+rownames(genefeatures) <- rownames(countsmatrix)
+
+#removing gene name from the second column
+gene_name_split <- str_split_fixed(genefeatures$IDGeneInfo, " ", 2)
+print(head(gene_name_split))
+colnames(gene_name_split)<- c("Gene_ID","Gene_Function")
+head(gene_name_split)
+gene_name_split_df<-data.frame(gene_name_split)
+head(gene_name_split_df)
+
+#convert the Gene_ID column to the row headers
+gene_name_split_df %>%
+     remove_rownames() %>%
+ column_to_rownames(var = 'Gene_ID')-> Pdam_Gene_Names_Info 
+```
+
+
+# DDS Object for Likelihood Ratio Test (LRT) = Used for time-series data
+```{r}
+metadata = data.frame(sample=colnames(countsmatrix),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countsmatrix)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countsmatrix)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countsmatrix)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata$condition[str_detect(metadata$condition,"TRUE")] <- "Control"
+metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
+
+metadata <- metadata %>% column_to_rownames("sample")
+
+metadata$condition <- as.factor(metadata$condition)
+
+#saveRDS(metadata, file = "metadata.rds")
+```
+
+
+```{r}
+ddsLRT <- DESeqDataSetFromMatrix(countData = countsmatrix, colData = metadata, design = ~ condition + hour + condition:hour)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_LRT <- rowSums(counts(ddsLRT)) >= 10
+length(keep_LRT) #26077
+ddsLRT <- ddsLRT[keep_LRT,]
+length(ddsLRT) #21267
+
+#help from https://hbctraining.github.io/DGE_workshop/lessons/08_DGE_LRT.html 
+ddsLRT <- DESeq(ddsLRT, test="LRT", reduced = ~ condition + hour) #this reduced function is including hour, which means than any differences at time point 0 will be controlled for. (see Michael Love's response on this thread: https://support.bioconductor.org/p/62684/  "Using a reduced formula of ~ time + treat means that genes which show a consistent difference from time 0 onward will not have a small p value. This is what we think you want, because differences between groups at time 0 should be controlled for, e.g. random differences between the individuals chosen for each treatment group which are observable before the treatment takes effect.")
+resLRT <- results(ddsLRT)
+summary(resLRT)
+
+#identifying significant genes
+resSig_LRT<-resLRT[which(resLRT$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_LRT<-merge(as.data.frame(resSig_LRT),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_LRT<-na.omit(anno_LRT)
+
+# Save  object to a file
+#saveRDS(ddsLRT, file = "ddsLRT.rds")
+```
+
+# DDS Objects for each hour (Wald tests for each hour ran individually)
+
+## Hour zero
+```{r}
+countdata_0 <- countsmatrix %>% dplyr::select(`0301C1`:`0306Z`)
+
+metadata_0 = data.frame(sample=colnames(countdata_0),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_0)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_0)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_0)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_0$condition[str_detect(metadata_0$condition,"TRUE")] <- "Control"
+metadata_0$condition[str_detect(metadata_0$condition,"FALSE")] <- "Wounded"
+
+metadata_0 <- metadata_0 %>% column_to_rownames("sample")
+
+metadata_0$condition <- as.factor(metadata_0$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_0=DESeq2::DESeqDataSetFromMatrix(countData = countdata_0, colData = metadata_0, design = ~condition)
+dds_0 <- estimateSizeFactors(dds_0)
+dds_0$sizeFactor #this is based on an internal normalization where geometric mean is calculated for each gene across all samples, then the counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample (https://rdrr.io › Bioconductor › DESeq2)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_0 <- rowSums(counts(dds_0)) >= 10
+length(keep_0) #26077
+dds_0 <- dds_0[keep_0,]
+length(dds_0) #19447
+
+dds_0<-DESeq(dds_0)
+
+# Save  object to a file
+#saveRDS(dds_0, file = "dds_0.rds")
+
+res_h0<-results(dds_0)
+summary(res_h0,alpha=0.05)
+#5 downregulated genes (3 outliers), no upregulated genes
+
+#identifying significant genes
+resSig_h0<-res_h0[which(res_h0$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h0<-merge(as.data.frame(resSig_h0),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h0<-na.omit(anno_h0)
+
+#saveRDS(anno_h0, file="annotated_h0.rds")
+```
+
+## Hour 1
+```{r}
+countdata_1 <- countsmatrix %>% dplyr::select(`1307C1`:`1312Z`)
+
+metadata_1 = data.frame(sample=colnames(countdata_1),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_1)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_1)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_1)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_1$condition[str_detect(metadata_1$condition,"TRUE")] <- "Control"
+metadata_1$condition[str_detect(metadata_1$condition,"FALSE")] <- "Wounded"
+
+metadata_1 <- metadata_1 %>% column_to_rownames("sample")
+
+metadata_1$condition <- as.factor(metadata_1$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_1=DESeq2::DESeqDataSetFromMatrix(countData = countdata_1, colData = metadata_1, design = ~condition)
+dds_1 <- estimateSizeFactors(dds_1)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_1 <- rowSums(counts(dds_1)) >= 10
+length(keep_1) #26077
+dds_1 <- dds_1[keep_1,]
+length(dds_1) #19536
+
+dds_1<-DESeq(dds_1)
+
+# Save  object to a file
+#saveRDS(dds_1, file = "dds_1.rds")
+
+res_h1<-results(dds_1)
+summary(res_h1,alpha=0.05)
+#26 upregulated genes, 49 downregulated, 1 outlier, 758 low counts
+
+#identifying significant genes
+resSig_h1<-res_h1[which(res_h1$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h1<-merge(as.data.frame(resSig_h1),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h1<-na.omit(anno_h1)
+
+saveRDS(anno_h1, file="annotated_h1.rds")
+```
+
+## Hour 2
+```{r}
+countdata_2 <- countsmatrix %>% dplyr::select(`2313C1`:`2318Z`)
+
+metadata_2 = data.frame(sample=colnames(countdata_2),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_2)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_2)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_2)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_2$condition[str_detect(metadata_2$condition,"TRUE")] <- "Control"
+metadata_2$condition[str_detect(metadata_2$condition,"FALSE")] <- "Wounded"
+
+metadata_2 <- metadata_2 %>% column_to_rownames("sample")
+
+metadata_2$condition <- as.factor(metadata_2$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_2=DESeq2::DESeqDataSetFromMatrix(countData = countdata_2, colData = metadata_2, design = ~condition)
+dds_2 <- estimateSizeFactors(dds_2)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_2 <- rowSums(counts(dds_2)) >= 10
+length(keep_2) #26077
+dds_2 <- dds_2[keep_2,]
+length(dds_2) #19779
+
+dds_2<-DESeq(dds_2)
+
+# Save  object to a file
+#saveRDS(dds_2, file = "dds_2.rds")
+
+res_h2<-results(dds_2)
+summary(res_h2,alpha=0.05)
+#6 upregulated genes, 10 downregulated, 8 outliers, 6517 low counts
+
+#identifying significant genes
+resSig_h2<-res_h2[which(res_h2$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h2<-merge(as.data.frame(resSig_h2),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h2<-na.omit(anno_h2)
+
+saveRDS(anno_h2, file="annotated_h2.rds")
+```
+
+## Hour 4
+```{r}
+countdata_4 <- countsmatrix %>% dplyr::select(`4325C1`:`4330Z`)
+
+metadata_4 = data.frame(sample=colnames(countdata_4),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_4)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_4)),
+                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_4)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata_4$condition[str_detect(metadata_4$condition,"TRUE")] <- "Control"
+metadata_4$condition[str_detect(metadata_4$condition,"FALSE")] <- "Wounded"
+
+metadata_4 <- metadata_4 %>% column_to_rownames("sample")
+
+metadata_4$condition <- as.factor(metadata_4$condition)
+
+#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
+dds_4=DESeq2::DESeqDataSetFromMatrix(countData = countdata_4, colData = metadata_4, design = ~condition)
+dds_4 <- estimateSizeFactors(dds_4)
+
+#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
+keep_4 <- rowSums(counts(dds_4)) >= 10
+length(keep_4) #26077
+dds_4 <- dds_4[keep_4,]
+length(dds_4) #19773
+
+dds_4<-DESeq(dds_4)
+
+# Save  object to a file
+#saveRDS(dds_4, file = "dds_4.rds")
+
+res_h4<-results(dds_4)
+summary(res_h4,alpha=0.05)
+#19 upregulated, 27 downregulated, 31 outliers, 1151 low counts
+
+#identifying significant genes
+resSig_h4<-res_h4[which(res_h4$padj<0.05), ]
+
+#annotate results to include Gene Function
+anno_h4<-merge(as.data.frame(resSig_h4),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+anno_h4<-na.omit(anno_h4)
+
+saveRDS(anno_h4, file="annotated_h4.rds")
+```
+
+# write gene annotations into 1 file
+```{r}
+anno_h0 %>% 
+  mutate(time = "hour 0") -> anno_h0
+
+anno_h1 %>% 
+  mutate(time = "hour 1") -> anno_h1
+
+anno_h2 %>% 
+  mutate(time = "hour 2") -> anno_h2
+
+anno_h4 %>% 
+  mutate(time = "hour 4") -> anno_h4
+
+anno_LRT %>% 
+  mutate(time = "LRT") -> anno_LRT
+
+full_join(anno_h0, anno_h1) -> annotated_DEG_list
+full_join(anno_h2, annotated_DEG_list) -> annotated_DEG_list
+full_join(anno_h4, annotated_DEG_list) -> annotated_DEG_list
+full_join(anno_LRT, annotated_DEG_list) -> annotated_DEG_list
+
+#write_csv(annotated_DEG_list, "../annotated_DEG_list_allhours_andLRT.csv")
+```
+

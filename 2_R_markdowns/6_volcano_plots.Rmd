@@ -1,0 +1,130 @@
+---
+title: "wound_healing_analysis_manuscript"
+author: "allyson_demerlis"
+date: "2022-10-25"
+output: html_document
+---
+# Install and load necessary packages
+```{r, install/load packages}
+#if you need to install all the packages, you need the package "BiocManager" first.
+# if (!require("BiocManager",quietly=TRUE))
+#   install.packages("BiocManager")
+#Now you can use BiocManager to install pacakges like DESeq2
+#BiocManager::install("DESeq2")
+
+library(DESeq2)
+
+library(DEGreport) # needs BiocManager
+  #DEGreport requires lasso2, which is not available for newer versions of R. To install lasso2, run library(remotes) (might need to install that package first), then run:
+#install_version("lasso2", "1.2-22")
+
+library(tidyverse) 
+library(EnhancedVolcano) # needs BiocManager
+library(ggpubr)
+```
+
+
+# Import DDS objects for hours
+```{r}
+dds_0 <- readRDS("dds_0.rds")
+res_h0 <- results(dds_0)
+
+dds_1 <- readRDS("dds_1.rds")
+res_h1 <- results(dds_1)
+
+dds_2 <- readRDS("dds_2.rds")
+res_h2 <- results(dds_2)
+
+dds_4 <- readRDS("dds_4.rds")
+res_h4 <- results(dds_4)
+```
+
+# Volcano Plot for each hour
+```{r}
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+  # this can be achieved with nested ifelse statements
+ keyvals_h0 <- ifelse(
+    res_h0$log2FoldChange < -2,'royalblue',
+      ifelse(res_h0$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h0[is.na(keyvals_h0)] <- 'black'
+  names(keyvals_h0)[keyvals_h0 == 'red'] <- 'high'
+  names(keyvals_h0)[keyvals_h0 == 'black'] <- 'mid'
+  names(keyvals_h0)[keyvals_h0 == 'royalblue'] <- 'low'
+  
+keyvals_h1 <- ifelse(
+    res_h1$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h1$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h1[is.na(keyvals_h1)] <- 'black'
+  names(keyvals_h1)[keyvals_h1 == 'red'] <- 'high'
+  names(keyvals_h1)[keyvals_h1 == 'black'] <- 'mid'
+  names(keyvals_h1)[keyvals_h1 == 'royalblue'] <- 'low'
+
+keyvals_h2 <- ifelse(
+    res_h2$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h2$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h2[is.na(keyvals_h2)] <- 'black'
+  names(keyvals_h2)[keyvals_h2 == 'red'] <- 'high'
+  names(keyvals_h2)[keyvals_h2 == 'black'] <- 'mid'
+  names(keyvals_h2)[keyvals_h2 == 'royalblue'] <- 'low'
+  
+keyvals_h4 <- ifelse(
+    res_h4$log2FoldChange < -2, 'royalblue',
+      ifelse(res_h4$log2FoldChange > 2, 'red',
+        'black'))
+  keyvals_h4[is.na(keyvals_h4)] <- 'black'
+  names(keyvals_h4)[keyvals_h4 == 'red'] <- 'high'
+  names(keyvals_h4)[keyvals_h4 == 'black'] <- 'mid'
+  names(keyvals_h4)[keyvals_h4 == 'royalblue'] <- 'low'
+  
+#hour 0
+EnhancedVolcano(res_h0, #The default cut-off for log2FC is >|2|; the default cut-off for P value is 10e-6.
+    lab = rownames(res_h0),
+    selectLab = rownames(res_h0)[which(names(keyvals_h0) %in% c('high', 'low'))],
+    labSize = 4.5,
+    colCustom = keyvals_h0,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue') #you want to use pvalue instead of padjusted for volcano visualization because padjusted turns all the non-significant ones to zero
+ggsave("volcano_h0.pdf", width = 7, height = 10)
+
+#hour 1
+EnhancedVolcano(res_h1,
+    lab = rownames(res_h1),
+    selectLab = rownames(res_h1)[which(names(keyvals_h1) %in% c('high', 'low'))],
+    labSize = 2,
+    drawConnectors = TRUE,
+    widthConnectors = 1.0,
+    colCustom = keyvals_h1,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h1.pdf", width = 7, height = 10)
+
+#hour 2
+EnhancedVolcano(res_h2,
+    lab = rownames(res_h2),
+    selectLab = rownames(res_h2)[which(names(keyvals_h2) %in% c('high', 'low'))],
+    labSize = 4.5,
+    drawConnectors = TRUE,
+    colCustom = keyvals_h2,
+    pCutoff = 10e-5,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h2.pdf", width = 7, height = 10)
+#note: one of the pdam genes (pdam_0009111) was annotated in EnhancedVolcano plot but isn't included in the anno_h2 dataset because we used the function "na.omit" to remove rows that had na's. However some of the significant genes have na's for the p-adjusted value.
+
+#hour 4
+EnhancedVolcano(res_h4,
+    lab = rownames(res_h4),
+    selectLab = rownames(res_h4)[which(names(keyvals_h4) %in% c('high', 'low'))],
+    labSize = 4.5,
+    pCutoff = 10e-5,
+    colCustom = keyvals_h4,
+    x = 'log2FoldChange',
+    y = 'pvalue')
+ggsave("volcano_h4.pdf", width = 7, height = 10)
+```
+

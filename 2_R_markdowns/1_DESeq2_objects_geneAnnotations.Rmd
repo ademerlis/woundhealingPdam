@@ -5,7 +5,7 @@ date: "2023-03-21"
 output: html_document
 ---
 
-This Rmarkdown involves cleaning the counts matrix, creating the metadata files, and creating the DDS objects for the full time-series model (Likelihood Ratio Test = LRT), as well as DDS objects for each hour separated (to look at comparisons within each time point). Significant DGE lists were then annotated using the Pdam genome .gff file. 
+This Rmarkdown involves cleaning the counts matrix, creating the metadata files, and creating the DDS objects for the full time-series model. Significant DGE lists were then annotated using the Pdam genome .gff file. 
 
 Note: DDS objects are saved here as .rds files, and then these are imported into all subsequent Rmarkdown files.
 
@@ -79,7 +79,7 @@ gene_name_split_df %>%
 ```
 
 
-# DDS Object for Likelihood Ratio Test (LRT) = Used for time-series data
+# DDS Object
 ```{r}
 metadata = data.frame(sample=colnames(countsmatrix),
                 condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countsmatrix)),
@@ -93,245 +93,214 @@ metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
 metadata <- metadata %>% column_to_rownames("sample")
 
 metadata$condition <- as.factor(metadata$condition)
+metadata$hour <- as.factor(metadata$hour)
+
+# creating grouping variable
+
+metadata$group <- factor(paste0(metadata$condition, "_", metadata$hour))
+metadata$group <- relevel(metadata$group, ref = "Control_0")
 
 #saveRDS(metadata, file = "metadata.rds")
 ```
 
-
+# Testing group (condition_hour)
 ```{r}
-ddsLRT <- DESeqDataSetFromMatrix(countData = countsmatrix, colData = metadata, design = ~ condition + hour + condition:hour)
+dds_group <- DESeqDataSetFromMatrix(countData = countsmatrix, colData = metadata, design = ~group)
+# Control_0 is reference level  
 
 #prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
-keep_LRT <- rowSums(counts(ddsLRT)) >= 10
-length(keep_LRT) #26077
-ddsLRT <- ddsLRT[keep_LRT,]
-length(ddsLRT) #21267
+keep_group <- rowSums(counts(dds_group)) >= 10
+length(keep_group) #26077
+dds_group <- dds_group[keep_group,]
+length(dds_group) #21267
 
-#help from https://hbctraining.github.io/DGE_workshop/lessons/08_DGE_LRT.html 
-ddsLRT <- DESeq(ddsLRT, test="LRT", reduced = ~ condition + hour) #this reduced function is including hour, which means than any differences at time point 0 will be controlled for. (see Michael Love's response on this thread: https://support.bioconductor.org/p/62684/  "Using a reduced formula of ~ time + treat means that genes which show a consistent difference from time 0 onward will not have a small p value. This is what we think you want, because differences between groups at time 0 should be controlled for, e.g. random differences between the individuals chosen for each treatment group which are observable before the treatment takes effect.")
-resLRT <- results(ddsLRT)
-summary(resLRT)
+dds_group <- DESeq(dds_group)
+# Save  object to a file
+#saveRDS(dds_group, file = "dds_group.rds")
 
-#identifying significant genes
-resSig_LRT<-resLRT[which(resLRT$padj<0.05), ]
+results_0h <- results(dds_group, contrast = c("group", "Wounded_0", "Control_0"), alpha = 0.05)
+summary(results_0h, alpha = 0.05) # 2 downregulated
+results_1h <- results(dds_group, contrast = c("group", "Wounded_1", "Control_1"), alpha = 0.05)
+summary(results_1h, alpha = 0.05) # 4 down
+results_2h <- results(dds_group, contrast = c("group", "Wounded_2", "Control_2"), alpha = 0.05)
+summary(results_2h, alpha = 0.05) # 1 up, 2 down
+results_4h <- results(dds_group, contrast = c("group", "Wounded_4", "Control_4"), alpha = 0.05)
+summary(results_4h, alpha = 0.05) # 43 up, 65 down
 
 #annotate results to include Gene Function
-anno_LRT<-merge(as.data.frame(resSig_LRT),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
-anno_LRT<-na.omit(anno_LRT)
+annot_0h<-merge(as.data.frame(results_0h),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_0h<-na.omit(annot_0h)
+annot_0h %>% 
+  filter(padj < 0.05) %>% 
+  mutate(group = "Wounded_0 vs Control_0") -> annot_0h_sig
 
-# Save  object to a file
-#saveRDS(ddsLRT, file = "ddsLRT.rds")
+annot_1h<-merge(as.data.frame(results_1h),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_1h<-na.omit(annot_1h)
+annot_1h %>% 
+  filter(padj < 0.05) %>% 
+  mutate(group = "Wounded_1 vs Control_1") -> annot_1h_sig
+
+annot_2h<-merge(as.data.frame(results_2h),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_2h<-na.omit(annot_2h)
+annot_2h %>% 
+  filter(padj < 0.05) %>% 
+  mutate(group = "Wounded_2 vs Control_2") -> annot_2h_sig
+
+annot_4h<-merge(as.data.frame(results_4h),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_4h<-na.omit(annot_4h)
+annot_4h %>% 
+  filter(padj < 0.05) %>% 
+  mutate(group = "Wounded_4 vs Control_4") -> annot_4h_sig
+
+#save annotated significant DEG lists as .csv files
+#rbind(annot_0h_sig, annot_1h_sig, annot_2h_sig, annot_4h_sig) %>%
+  #write.csv(file = "Annotated_significant_DEG_lists_timepoint_group_contrasts.csv", row.names = FALSE)
 ```
 
-# DDS Objects for each hour (Wald tests for each hour ran individually)
+# Testing factorial design (condition + hour + condition:hour)
 
-## Hour zero
 ```{r}
-countdata_0 <- countsmatrix %>% dplyr::select(`0301C1`:`0306Z`)
-
-metadata_0 = data.frame(sample=colnames(countdata_0),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_0)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_0)),
- id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_0)))
-
-#changing TRUE and FALSE for condition to Control and Wounded
-metadata_0$condition[str_detect(metadata_0$condition,"TRUE")] <- "Control"
-metadata_0$condition[str_detect(metadata_0$condition,"FALSE")] <- "Wounded"
-
-metadata_0 <- metadata_0 %>% column_to_rownames("sample")
-
-metadata_0$condition <- as.factor(metadata_0$condition)
-
-#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
-dds_0=DESeq2::DESeqDataSetFromMatrix(countData = countdata_0, colData = metadata_0, design = ~condition)
-dds_0 <- estimateSizeFactors(dds_0)
-dds_0$sizeFactor #this is based on an internal normalization where geometric mean is calculated for each gene across all samples, then the counts for a gene in each sample is then divided by this mean. The median of these ratios in a sample is the size factor for that sample (https://rdrr.io › Bioconductor › DESeq2)
+dds_factorial <- DESeqDataSetFromMatrix(countData = countsmatrix, colData = metadata, design = ~ hour + condition + hour:condition)
 
 #prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
-keep_0 <- rowSums(counts(dds_0)) >= 10
-length(keep_0) #26077
-dds_0 <- dds_0[keep_0,]
-length(dds_0) #19447
+keep_factorial <- rowSums(counts(dds_factorial)) >= 10
+length(keep_factorial) #26077
+dds_factorial <- dds_factorial[keep_factorial,]
+length(dds_factorial) #21267
 
-dds_0<-DESeq(dds_0)
+# 1. Which genes respond to injury (overall)?
+dds_lrt_injury <- DESeq(dds_factorial, test = "LRT", reduced = ~ hour)
+res_injury <- results(dds_lrt_injury, alpha = 0.05)
+summary(res_injury) #34 up, 58 down
+# Significant = injury-responsive genes
+#saveRDS(dds_lrt_injury, file = "dds_lrt_injury.rds")
 
-# Save  object to a file
-#saveRDS(dds_0, file = "dds_0.rds")
+# 2. Which genes show time-specific injury response?
+dds_lrt_interaction <- DESeq(dds_factorial, test = "LRT", 
+                             reduced = ~ hour + condition)
+res_interaction <- results(dds_lrt_interaction, alpha = 0.05)
+summary(res_interaction) # 1 up, 2 down
+# Significant = early vs late responders
+#saveRDS(dds_lrt_interaction, file = "dds_lrt_interaction.rds")
 
-res_h0<-results(dds_0)
-summary(res_h0,alpha=0.05)
-#5 downregulated genes (3 outliers), no upregulated genes
-
-#identifying significant genes
-resSig_h0<-res_h0[which(res_h0$padj<0.05), ]
-
-#annotate results to include Gene Function
-anno_h0<-merge(as.data.frame(resSig_h0),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
-anno_h0<-na.omit(anno_h0)
-
-#saveRDS(anno_h0, file="annotated_h0.rds")
+# 3. Which genes change over time (regardless of injury)?
+dds_lrt_time <- DESeq(dds_factorial, test = "LRT", reduced = ~ condition)
+res_time <- results(dds_lrt_time, alpha = 0.05)
+summary(res_time) # 3677 up, 3963 down
+# Significant = temporal dynamics
+#saveRDS(dds_lrt_time, file = "dds_lrt_time.rds")
 ```
 
-## Hour 1
+annotate 
 ```{r}
-countdata_1 <- countsmatrix %>% dplyr::select(`1307C1`:`1312Z`)
-
-metadata_1 = data.frame(sample=colnames(countdata_1),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_1)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_1)),
-                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_1)))
-
-#changing TRUE and FALSE for condition to Control and Wounded
-metadata_1$condition[str_detect(metadata_1$condition,"TRUE")] <- "Control"
-metadata_1$condition[str_detect(metadata_1$condition,"FALSE")] <- "Wounded"
-
-metadata_1 <- metadata_1 %>% column_to_rownames("sample")
-
-metadata_1$condition <- as.factor(metadata_1$condition)
-
-#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
-dds_1=DESeq2::DESeqDataSetFromMatrix(countData = countdata_1, colData = metadata_1, design = ~condition)
-dds_1 <- estimateSizeFactors(dds_1)
-
-#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
-keep_1 <- rowSums(counts(dds_1)) >= 10
-length(keep_1) #26077
-dds_1 <- dds_1[keep_1,]
-length(dds_1) #19536
-
-dds_1<-DESeq(dds_1)
-
-# Save  object to a file
-#saveRDS(dds_1, file = "dds_1.rds")
-
-res_h1<-results(dds_1)
-summary(res_h1,alpha=0.05)
-#26 upregulated genes, 49 downregulated, 1 outlier, 758 low counts
-
-#identifying significant genes
-resSig_h1<-res_h1[which(res_h1$padj<0.05), ]
-
 #annotate results to include Gene Function
-anno_h1<-merge(as.data.frame(resSig_h1),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
-anno_h1<-na.omit(anno_h1)
+annot_res_injury<-merge(as.data.frame(res_injury),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_res_injury<-na.omit(annot_res_injury)
+annot_res_injury %>% 
+  filter(padj < 0.05) %>% 
+  mutate(contrast = "Injury") -> annot_res_injury_sig
 
-saveRDS(anno_h1, file="annotated_h1.rds")
+annot_res_interaction<-merge(as.data.frame(res_interaction),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_res_interaction<-na.omit(annot_res_interaction)
+annot_res_interaction %>% 
+  filter(padj < 0.05) %>% 
+  mutate(contrast = "Interaction") -> annot_res_interaction_sig
+
+annot_res_time<-merge(as.data.frame(res_time),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_res_time<-na.omit(annot_res_time)
+annot_res_time %>% 
+  filter(padj < 0.05) %>% 
+  mutate(contrast = "Time") -> annot_res_time_sig
+
+#save annotated significant DEG lists as .csv files
+# rbind(annot_res_injury_sig, annot_res_interaction_sig, annot_res_time_sig) %>%
+#   write.csv(file = "Annotated_significant_DEG_lists_lrt_contrasts.csv", row.names = FALSE)
 ```
 
-## Hour 2
+
 ```{r}
-countdata_2 <- countsmatrix %>% dplyr::select(`2313C1`:`2318Z`)
+sig_w_1v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_1v0) #1191
 
-metadata_2 = data.frame(sample=colnames(countdata_2),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_2)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_2)),
-                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_2)))
+sig_w_2v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_2v0) #3028
 
-#changing TRUE and FALSE for condition to Control and Wounded
-metadata_2$condition[str_detect(metadata_2$condition,"TRUE")] <- "Control"
-metadata_2$condition[str_detect(metadata_2$condition,"FALSE")] <- "Wounded"
+sig_w_4v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_4v0) #2863
 
-metadata_2 <- metadata_2 %>% column_to_rownames("sample")
+# Get control time effects
+res_c_1v0 <- results(dds_group, contrast = c("group", "Control_1", "Control_0"))
+res_c_2v0 <- results(dds_group, contrast = c("group", "Control_2", "Control_0"))
+res_c_4v0 <- results(dds_group, contrast = c("group", "Control_4", "Control_0"))
 
-metadata_2$condition <- as.factor(metadata_2$condition)
+# Control temporal changes
+sig_c_1v0 <- rownames(res_c_1v0[!is.na(res_c_1v0$padj) & res_c_1v0$padj < 0.05, ]) 
+length(sig_c_1v0) #1331
+sig_c_2v0 <- rownames(res_c_2v0[!is.na(res_c_2v0$padj) & res_c_2v0$padj < 0.05, ])
+length(sig_c_2v0) #3366
+sig_c_4v0 <- rownames(res_c_4v0[!is.na(res_c_4v0$padj) & res_c_4v0$padj < 0.05, ])
+length(sig_c_4v0) #2710
 
-#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
-dds_2=DESeq2::DESeqDataSetFromMatrix(countData = countdata_2, colData = metadata_2, design = ~condition)
-dds_2 <- estimateSizeFactors(dds_2)
+control_time_genes <- unique(c(
+  rownames(res_c_1v0[!is.na(res_c_1v0$padj) & res_c_1v0$padj < 0.05, ]),
+  rownames(res_c_2v0[!is.na(res_c_2v0$padj) & res_c_2v0$padj < 0.05, ]),
+  rownames(res_c_4v0[!is.na(res_c_4v0$padj) & res_c_4v0$padj < 0.05, ])
+))
 
-#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
-keep_2 <- rowSums(counts(dds_2)) >= 10
-length(keep_2) #26077
-dds_2 <- dds_2[keep_2,]
-length(dds_2) #19779
+# Get wounded time effects and filter
+res_w_1v0 <- results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))
+res_w_2v0 <- results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))
+res_w_4v0 <- results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))
 
-dds_2<-DESeq(dds_2)
+sig_w_1v0_injury <- setdiff(
+  rownames(res_w_1v0[!is.na(res_w_1v0$padj) & res_w_1v0$padj < 0.05, ]),
+  control_time_genes
+)
+length(sig_w_1v0_injury) #295
 
-# Save  object to a file
-#saveRDS(dds_2, file = "dds_2.rds")
+sig_w_2v0_injury <- setdiff(
+  rownames(res_w_2v0[!is.na(res_w_2v0$padj) & res_w_2v0$padj < 0.05, ]),
+  control_time_genes
+)
 
-res_h2<-results(dds_2)
-summary(res_h2,alpha=0.05)
-#6 upregulated genes, 10 downregulated, 8 outliers, 6517 low counts
+sig_w_4v0_injury <- setdiff(
+  rownames(res_w_4v0[!is.na(res_w_4v0$padj) & res_w_4v0$padj < 0.05, ]),
+  control_time_genes
+)
 
-#identifying significant genes
-resSig_h2<-res_h2[which(res_h2$padj<0.05), ]
+# Summary
+cat("Control time-responsive genes:", length(control_time_genes), "\n\n")
+cat("Wounded temporal genes (before/after filtering):\n")
+cat("1h:", length(sig_w_1v0), "→", length(sig_w_1v0_injury), "\n")
+cat("2h:", length(sig_w_2v0), "→", length(sig_w_2v0_injury), "\n")
+cat("4h:", length(sig_w_4v0), "→", length(sig_w_4v0_injury), "\n")
+# 1h: 1191 → 295 
+# 2h: 3028 → 755 
+# 4h: 2863 → 937 
 
-#annotate results to include Gene Function
-anno_h2<-merge(as.data.frame(resSig_h2),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
-anno_h2<-na.omit(anno_h2)
+annot_sig_w_1v0_injury<-merge(as.data.frame(res_w_1v0[sig_w_1v0_injury,]),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_sig_w_1v0_injury<-na.omit(annot_sig_w_1v0_injury)
+annot_sig_w_1v0_injury %>% 
+  mutate(contrast = "Wounded 1h vs 0h (injury-filtered)") -> annot_sig_w_1v0_injury_sig
 
-saveRDS(anno_h2, file="annotated_h2.rds")
-```
+annot_sig_w_2v0_injury<-merge(as.data.frame(res_w_2v0[sig_w_2v0_injury,]),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_sig_w_2v0_injury<-na.omit(annot_sig_w_2v0_injury)
+annot_sig_w_2v0_injury %>% 
+  mutate(contrast = "Wounded 2h vs 0h (injury-filtered)") -> annot_sig_w_2v0_injury_sig
 
-## Hour 4
-```{r}
-countdata_4 <- countsmatrix %>% dplyr::select(`4325C1`:`4330Z`)
+annot_sig_w_4v0_injury<-merge(as.data.frame(res_w_4v0[sig_w_4v0_injury,]),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
+annot_sig_w_4v0_injury<-na.omit(annot_sig_w_4v0_injury)
+annot_sig_w_4v0_injury %>% 
+  mutate(contrast = "Wounded 4h vs 0h (injury-filtered)") -> annot_sig_w_4v0_injury_sig
 
-metadata_4 = data.frame(sample=colnames(countdata_4),
-                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countdata_4)),
-                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countdata_4)),
-                id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countdata_4)))
-
-#changing TRUE and FALSE for condition to Control and Wounded
-metadata_4$condition[str_detect(metadata_4$condition,"TRUE")] <- "Control"
-metadata_4$condition[str_detect(metadata_4$condition,"FALSE")] <- "Wounded"
-
-metadata_4 <- metadata_4 %>% column_to_rownames("sample")
-
-metadata_4$condition <- as.factor(metadata_4$condition)
-
-#DESeq2 from a counts matrix; requires count data, metadata, and the experimental design
-dds_4=DESeq2::DESeqDataSetFromMatrix(countData = countdata_4, colData = metadata_4, design = ~condition)
-dds_4 <- estimateSizeFactors(dds_4)
-
-#prefiltering recommended by DESeq2 Vignette (removes anything with reads below 10)
-keep_4 <- rowSums(counts(dds_4)) >= 10
-length(keep_4) #26077
-dds_4 <- dds_4[keep_4,]
-length(dds_4) #19773
-
-dds_4<-DESeq(dds_4)
-
-# Save  object to a file
-#saveRDS(dds_4, file = "dds_4.rds")
-
-res_h4<-results(dds_4)
-summary(res_h4,alpha=0.05)
-#19 upregulated, 27 downregulated, 31 outliers, 1151 low counts
-
-#identifying significant genes
-resSig_h4<-res_h4[which(res_h4$padj<0.05), ]
-
-#annotate results to include Gene Function
-anno_h4<-merge(as.data.frame(resSig_h4),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
-anno_h4<-na.omit(anno_h4)
-
-saveRDS(anno_h4, file="annotated_h4.rds")
-```
-
-# write gene annotations into 1 file
-```{r}
-anno_h0 %>% 
-  mutate(time = "hour 0") -> anno_h0
-
-anno_h1 %>% 
-  mutate(time = "hour 1") -> anno_h1
-
-anno_h2 %>% 
-  mutate(time = "hour 2") -> anno_h2
-
-anno_h4 %>% 
-  mutate(time = "hour 4") -> anno_h4
-
-anno_LRT %>% 
-  mutate(time = "LRT") -> anno_LRT
-
-full_join(anno_h0, anno_h1) -> annotated_DEG_list
-full_join(anno_h2, annotated_DEG_list) -> annotated_DEG_list
-full_join(anno_h4, annotated_DEG_list) -> annotated_DEG_list
-full_join(anno_LRT, annotated_DEG_list) -> annotated_DEG_list
-
-#write_csv(annotated_DEG_list, "../annotated_DEG_list_allhours_andLRT.csv")
+#save annotated significant DEG lists as .csv files
+rbind(annot_sig_w_1v0_injury_sig, annot_sig_w_2v0_injury_sig, annot_sig_w_4v0_injury_sig) %>%
+  write.csv(file = "Annotated_significant_DEG_lists_wounded_injury_filtered_contrasts.csv", row.names = FALSE)
 ```
 

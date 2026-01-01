@@ -1,0 +1,413 @@
+---
+title: "venn_diagrams"
+author: "allyson_demerlis"
+date: "2023-03-22"
+output: html_document
+---
+# Install and load necessary packages
+```{r, install/load packages}
+library(tidyverse) 
+library(ggpubr)
+library(ggvenn)
+library(UpSetR)
+library(DESeq2)
+library(DEGreport)
+library(ComplexHeatmap)
+```
+
+
+# Import DESeq2 object with group information
+```{r}
+dds_group <- readRDS("rds_files/dds_group.rds")
+```
+
+# Principal component analyses and Scree plots
+```{r}
+# Get normalized counts
+rld <- rlog(dds_group, blind = FALSE)
+
+pcaData <- plotPCA(rld, intgroup = c("hour", "condition"), returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+
+ggplot(pcaData, aes(x = PC1, y = PC2, shape = hour, color = condition)) +
+  geom_point(size = 3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  theme_bw(base_size = 14) +
+  geom_polygon(mapping = aes(fill = condition), alpha = 0.5) +
+  #scale_color_manual(values = c("0" = "lightgrey", "1" = "lightblue", "2" = "blue", "4" = "darkblue")) +
+  scale_fill_manual(values = c("Wounded" = "salmon1", "Control" = "lightskyblue2")) +
+  scale_color_manual(values = c("Wounded" = "salmon1", "Control" = "lightskyblue2")) 
+#ggsave("../4_Figures/PCA_all_hours.pdf", width=8, height=6)
+```
+
+# comparing controls to wounded at each hour
+```{r}
+results_0h <- results(dds_group, contrast = c("group", "Wounded_0", "Control_0"), alpha = 0.05)
+summary(results_0h, alpha = 0.05) # 2 downregulated
+results_1h <- results(dds_group, contrast = c("group", "Wounded_1", "Control_1"), alpha = 0.05)
+summary(results_1h, alpha = 0.05) # 4 down
+results_2h <- results(dds_group, contrast = c("group", "Wounded_2", "Control_2"), alpha = 0.05)
+summary(results_2h, alpha = 0.05) # 1 up, 2 down
+results_4h <- results(dds_group, contrast = c("group", "Wounded_4", "Control_4"), alpha = 0.05)
+summary(results_4h, alpha = 0.05) # 43 up, 65 down
+
+sig_0h <- rownames(results_0h[!is.na(results_0h$padj) & results_0h$padj < 0.05, ])
+sig_1h <- rownames(results_1h[!is.na(results_1h$padj) & results_1h$padj < 0.05, ])
+sig_2h <- rownames(results_2h[!is.na(results_2h$padj) & results_2h$padj < 0.05, ])
+sig_4h <- rownames(results_4h[!is.na(results_4h$padj) & results_4h$padj < 0.05, ])
+
+# Venn diagram
+ggvenn(
+  list(
+    "0h" = sig_0h,
+    "1h" = sig_1h,
+    "2h" = sig_2h,
+    "4h" = sig_4h
+  ),
+  fill_color = c("#440154FF", "#31688EFF", "#35B779FF", "#FDE724FF"),
+  stroke_size = 0.5,
+  set_name_size = 6
+)
+
+# bar plot for up vs downregulated
+count_up_down <- function(res, timepoint) {
+  res_df <- as.data.frame(res) %>% 
+  rownames_to_column("gene") %>%
+    as_tibble()
+
+  res_df %>%
+    filter(!is.na(padj), padj < 0.05) %>%
+    mutate(direction = ifelse(log2FoldChange > 0, "Upregulated", "Downregulated")) %>%
+    group_by(direction) %>%
+    summarise(n = n(), .groups = "drop") %>% 
+    mutate(time = timepoint)
+}
+
+deg_counts <- bind_rows(
+  count_up_down(results_0h, "0 h"),
+  count_up_down(results_1h, "1 h"),
+  count_up_down(results_2h, "2 h"),
+  count_up_down(results_4h, "4 h")
+)
+
+deg_counts
+
+deg_counts_div <- deg_counts %>%
+  mutate(n_signed = ifelse(direction == "Downregulated", -n, n))
+
+ggplot(deg_counts_div, aes(x = time, y = n_signed, fill = direction)) +
+  geom_col(width = 0.7, color = "black") +
+  scale_fill_manual(
+    values = c("Upregulated" = "firebrick3",
+               "Downregulated" = "steelblue")
+  ) +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(
+    x = "Time Post-Wounding",
+    y = "Number of Differentially Expressed Genes",
+    fill = "Regulation"
+  ) +
+  theme_bw(base_size = 12)
+#ggsave("deg_barplot_timepoints.pdf", width = 6, height = 4)
+```
+
+
+# Extracting Injury response genes only (removing time effects seen in controls)
+```{r}
+sig_w_1v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_1v0) #1191
+
+sig_w_2v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_2v0) #3028
+
+sig_w_4v0 <- rownames(
+  results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))[!is.na(results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))$padj) & results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))$padj < 0.05, ]
+)
+length(sig_w_4v0) #2863
+
+# Get control time effects
+res_c_1v0 <- results(dds_group, contrast = c("group", "Control_1", "Control_0"))
+res_c_2v0 <- results(dds_group, contrast = c("group", "Control_2", "Control_0"))
+res_c_4v0 <- results(dds_group, contrast = c("group", "Control_4", "Control_0"))
+
+# Control temporal changes
+sig_c_1v0 <- rownames(res_c_1v0[!is.na(res_c_1v0$padj) & res_c_1v0$padj < 0.05, ]) 
+length(sig_c_1v0) #1331
+sig_c_2v0 <- rownames(res_c_2v0[!is.na(res_c_2v0$padj) & res_c_2v0$padj < 0.05, ])
+length(sig_c_2v0) #3366
+sig_c_4v0 <- rownames(res_c_4v0[!is.na(res_c_4v0$padj) & res_c_4v0$padj < 0.05, ])
+length(sig_c_4v0) #2710
+
+control_time_genes <- unique(c(
+  rownames(res_c_1v0[!is.na(res_c_1v0$padj) & res_c_1v0$padj < 0.05, ]),
+  rownames(res_c_2v0[!is.na(res_c_2v0$padj) & res_c_2v0$padj < 0.05, ]),
+  rownames(res_c_4v0[!is.na(res_c_4v0$padj) & res_c_4v0$padj < 0.05, ])
+))
+
+# Get wounded time effects and filter
+res_w_1v0 <- results(dds_group, contrast = c("group", "Wounded_1", "Wounded_0"))
+res_w_2v0 <- results(dds_group, contrast = c("group", "Wounded_2", "Wounded_0"))
+res_w_4v0 <- results(dds_group, contrast = c("group", "Wounded_4", "Wounded_0"))
+
+sig_w_1v0_injury <- setdiff(
+  rownames(res_w_1v0[!is.na(res_w_1v0$padj) & res_w_1v0$padj < 0.05, ]),
+  control_time_genes
+)
+length(sig_w_1v0_injury) #295
+
+sig_w_2v0_injury <- setdiff(
+  rownames(res_w_2v0[!is.na(res_w_2v0$padj) & res_w_2v0$padj < 0.05, ]),
+  control_time_genes
+)
+
+sig_w_4v0_injury <- setdiff(
+  rownames(res_w_4v0[!is.na(res_w_4v0$padj) & res_w_4v0$padj < 0.05, ]),
+  control_time_genes
+)
+
+# Summary
+cat("Control time-responsive genes:", length(control_time_genes), "\n\n")
+cat("Wounded temporal genes (before/after filtering):\n")
+cat("1h:", length(sig_w_1v0), "→", length(sig_w_1v0_injury), "\n")
+cat("2h:", length(sig_w_2v0), "→", length(sig_w_2v0_injury), "\n")
+cat("4h:", length(sig_w_4v0), "→", length(sig_w_4v0_injury), "\n")
+# 1h: 1191 → 295 
+# 2h: 3028 → 755 
+# 4h: 2863 → 937 
+
+deg_counts <- bind_rows(
+  count_up_down(results_0h, "0 h"),
+  count_up_down(results_1h, "1 h"),
+  count_up_down(results_2h, "2 h"),
+  count_up_down(results_4h, "4 h")
+)
+```
+
+
+
+
+
+# Upset plots
+
+```{r}
+#UpSet plot - all temporal genes
+upset(fromList(list(
+  "Control_1h" = sig_c_1v0,
+  "Control_2h" = sig_c_2v0,
+  "Control_4h" = sig_c_4v0,
+  "Wounded_1h" = sig_w_1v0,
+  "Wounded_2h" = sig_w_2v0,
+  "Wounded_4h" = sig_w_4v0
+)), nsets=6, order.by = "freq")
+```
+
+
+```{r}
+# UpSet plot - just wounded 
+upset(fromList(list(
+  "1h" = sig_w_1v0_injury,
+  "2h" = sig_w_2v0_injury,
+  "4h" = sig_w_4v0_injury
+)), order.by = "freq")
+```
+
+
+```{r}
+# compare time contrasts (i.e. Wounded_0 vs Control_0) to the injury ones (Wounded_1 vs Wounded_0 -- but after control DEGs have already been filtered out)
+# this is a sanity check to see how much overlap there is and if you need to report both separately
+
+upset(fromList(list(
+  "Wounded_0h vs Control_0h" = sig_0h,
+  "Wounded_1h vs Control_1h" = sig_1h,
+  "Wounded_2h vs Control_2h" = sig_2h,
+  "Wounded_4h vs Control_4h" = sig_4h,
+  "Wounded_1h vs Wounded_0h" = sig_w_1v0_injury,
+  "Wounded_2h vs Wounded_0h" = sig_w_2v0_injury,
+  "Wounded_4h vs Wounded_0h" = sig_w_4v0_injury
+)), nsets=7, order.by = "freq")
+
+# 78 genes are unique to Wounded_4 vs Control_4 and not found in any of the injury response gene sets
+sig_genes_list <- list(
+  "Wounded_0h vs Control_0h" = sig_0h,
+  "Wounded_1h vs Control_1h" = sig_1h,
+  "Wounded_2h vs Control_2h" = sig_2h,
+  "Wounded_4h vs Control_4h" = sig_4h,
+  "Wounded_1h vs Wounded_0h" = sig_w_1v0_injury,
+  "Wounded_2h vs Wounded_0h" = sig_w_2v0_injury,
+  "Wounded_4h vs Wounded_0h" = sig_w_4v0_injury
+)
+
+# Create a binary matrix (genes x timepoints)
+all_genes <- unique(unlist(sig_genes_list))
+upset_matrix <- matrix(0, nrow = length(all_genes), ncol = length(sig_genes_list))
+rownames(upset_matrix) <- all_genes
+colnames(upset_matrix) <- names(sig_genes_list)
+
+for (time in names(sig_genes_list)) {
+  upset_matrix[sig_genes_list[[time]], time] <- 1
+}
+
+# Make UpSet plot
+m <- make_comb_mat(upset_matrix)
+
+comb_counts <- comb_size(m)
+comb_perc   <- round(100 * comb_counts / sum(comb_counts), 1)
+
+# Only label intersections with ≥ 5 genes
+comb_labels <- ifelse(
+  comb_counts >= 5,
+  paste0(comb_counts, "\n(", comb_perc, "%)"),
+  ""
+)
+
+up <- UpSet(
+  m,
+  comb_order = order(comb_counts, decreasing = TRUE),
+
+  top_annotation = HeatmapAnnotation(
+    "Intersection Size" = anno_barplot(
+      comb_counts,
+      border = FALSE,
+      gp = gpar(fill = "black"),
+      height = unit(4, "cm"),
+      annotation_label = comb_labels,
+      annotation_label_gp = gpar(fontsize = 8),
+      annotation_label_offset = unit(2, "mm")
+    ),
+    annotation_name_side = "left"
+  ),
+
+  right_annotation = rowAnnotation(
+    "Set Size" = anno_barplot(
+      set_size(m),
+      border = FALSE,
+      gp = gpar(fill = "darkblue"),
+      width = unit(4, "cm")
+    )
+  ),
+
+  column_title = "Injury-Responsive Genes"
+)
+
+pdf("UpSet_injury_responsive_genes.pdf", width = 10, height = 6)
+draw(up)
+dev.off()
+```
+
+
+
+# Cluster analysis
+
+```{r}
+# Get all unique genes from the three time points
+all_injury_temporal <- unique(c(sig_w_1v0_injury, sig_w_2v0_injury, sig_w_4v0_injury))
+str(all_injury_temporal) #1717
+
+# Get normalized counts
+rld <- rlog(dds_group, blind = FALSE)
+
+# Cluster them
+clusters <- degPatterns(assay(rld)[all_injury_temporal, ], 
+                       metadata = as.data.frame(colData(dds_group)), 
+                       time = "hour",
+                       col = "condition",
+                       minc = 100,       # Adjust based on how many genes you have
+                       cutoff = 0.7)
+
+# Check cluster sizes
+table(clusters$df$cluster)
+
+# Create custom plot
+cluster_data <- clusters$normalized
+
+# Custom plot
+p1<-ggplot(cluster_data, aes(x = hour, y = value, color = condition, group = genes)) +
+  geom_point(alpha = 0.1) +
+  stat_summary(aes(group = condition), fun = mean, geom = "line", size = 1) +
+  facet_wrap(~ cluster, scales = "free_y", labeller = labeller(cluster = function(x) paste("Gene Cluster:", x))) +
+  scale_color_manual(values = c("Control" = "steelblue", 
+                                "Wounded" = "red3")) +
+  labs(x = "Hour", y = "Normalized Expression", 
+       color = "Condition") +
+  theme_bw(base_size = 14) +
+  theme(strip.background = element_rect(fill = "gray90"),
+        strip.text = element_text(face = "bold"))
+
+#ggsave("degpatterns_recreated_custom.pdf", width = 12, height = 8)
+```
+
+```{r}
+# Add intersection information to the cluster data
+clusters$df$intersection_group <- NA
+
+# Classify each gene by which time points it's in
+for (i in 1:nrow(clusters$df)) {
+  gene <- clusters$df$genes[i]
+  
+  in_1h <- gene %in% sig_w_1v0_injury
+  in_2h <- gene %in% sig_w_2v0_injury
+  in_4h <- gene %in% sig_w_4v0_injury
+  
+  if (in_1h & in_2h & in_4h) {
+    clusters$df$intersection_group[i] <- "All_times"
+  } else if (in_1h & in_2h & !in_4h) {
+    clusters$df$intersection_group[i] <- "1h_2h"
+  } else if (in_1h & !in_2h & in_4h) {
+    clusters$df$intersection_group[i] <- "1h_4h"
+  } else if (!in_1h & in_2h & in_4h) {
+    clusters$df$intersection_group[i] <- "2h_4h"
+  } else if (in_1h & !in_2h & !in_4h) {
+    clusters$df$intersection_group[i] <- "1h_only"
+  } else if (!in_1h & in_2h & !in_4h) {
+    clusters$df$intersection_group[i] <- "2h_only"
+  } else if (!in_1h & !in_2h & in_4h) {
+    clusters$df$intersection_group[i] <- "4h_only"
+  }
+}
+
+# Summary table: clusters vs intersection groups
+table(clusters$df$cluster, clusters$df$intersection_group)
+
+# Save this enriched data
+write.csv(clusters$df, "cluster_with_intersection_info.csv", row.names = FALSE)
+
+
+# Get cluster data
+cluster_summary <- clusters$df %>%
+  group_by(cluster, intersection_group) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Stacked bar plot
+p2<-ggplot(cluster_summary, aes(x = factor(cluster), y = count, fill = intersection_group)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual(values = c(
+    "All_times" = "#440154FF",
+    "1h_2h" = "#31688EFF",
+    "2h_4h" = "#35B779FF",
+    "1h_4h" = "#FDE724FF",
+    "1h_only" = "#EFC000FF",
+    "2h_only" = "#868686FF",
+    "4h_only" = "#CD534CFF"
+  )) +
+  labs(
+       x = "Gene Cluster", y = "Number of Genes",
+       fill = "Time Point Pattern") +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#ggsave("cluster_by_intersection.pdf", width = 10, height = 6)
+```
+
+
+```{r}
+# Combine the two plots
+ggarrange(p1, p2, ncol = 2, labels = c("A", "B"), widths = c(1.5,1))
+ggsave("cluster_analysis_combined.pdf", width = 16, height = 8)
+```
+
+

@@ -1,0 +1,22 @@
+"Intersection","N_genes"
+"Wounded_4h vs Wounded_0h",770
+"Wounded_2h vs Wounded_0h",526
+"Wounded_1h vs Wounded_0h",152
+"Wounded_2h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h",101
+"Wounded_1h vs Wounded_0h ∩ Wounded_2h vs Wounded_0h",95
+"Wounded_4h vs Control_4h",78
+"Wounded_1h vs Wounded_0h ∩ Wounded_2h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h",26
+"Wounded_4h vs Control_4h ∩ Wounded_4h vs Wounded_0h",20
+"Wounded_1h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h",16
+"Wounded_4h vs Control_4h ∩ Wounded_2h vs Wounded_0h",3
+"Wounded_1h vs Control_1h ∩ Wounded_4h vs Control_4h",2
+"Wounded_4h vs Control_4h ∩ Wounded_1h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h",2
+"Wounded_0h vs Control_0h",1
+"Wounded_1h vs Control_1h",1
+"Wounded_2h vs Control_2h",1
+"Wounded_0h vs Control_0h ∩ Wounded_4h vs Wounded_0h",1
+"Wounded_2h vs Control_2h ∩ Wounded_2h vs Wounded_0h",1
+"Wounded_4h vs Control_4h ∩ Wounded_1h vs Wounded_0h",1
+"Wounded_4h vs Control_4h ∩ Wounded_1h vs Wounded_0h ∩ Wounded_2h vs Wounded_0h",1
+"Wounded_1h vs Control_1h ∩ Wounded_2h vs Control_2h ∩ Wounded_1h vs Wounded_0h ∩ Wounded_2h vs Wounded_0h",1
+"Wounded_4h vs Control_4h ∩ Wounded_1h vs Wounded_0h ∩ Wounded_2h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h",1

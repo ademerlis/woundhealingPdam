@@ -1,0 +1,54 @@
+ParentTermID,Count,Percent,ParentTermDescription,Ontology,Cluster,Assignment
+GO:0006886,1,50,intracellular protein transport,BP,Cluster_1,Unique
+GO:0055086,1,50,nucleobase-containing small molecule metabolic process,BP,Cluster_1,Shared
+GO:0003824,4,23.52941176,catalytic activity,MF,Cluster_1,Shared
+GO:0005215,3,17.64705882,transporter activity,MF,Cluster_1,Shared
+GO:0008289,1,5.882352941,lipid binding,MF,Cluster_1,Shared
+GO:0016740,2,11.76470588,transferase activity,MF,Cluster_1,Shared
+GO:0016829,1,5.882352941,lyase activity,MF,Cluster_1,Unique
+GO:0016853,1,5.882352941,isomerase activity,MF,Cluster_1,Unique
+GO:0048018,1,5.882352941,receptor ligand activity,MF,Cluster_1,Unique
+GO:0060090,1,5.882352941,molecular adaptor activity,MF,Cluster_1,Unique
+GO:0098772,1,5.882352941,molecular function regulator activity,MF,Cluster_1,Unique
+GO:0140096,1,5.882352941,"catalytic activity, acting on a protein",MF,Cluster_1,Shared
+GO:0140657,1,5.882352941,ATP-dependent activity,MF,Cluster_1,Shared
+GO:0007010,1,25,cytoskeleton organization,BP,Cluster_2,Shared
+GO:0023052,1,25,signaling,BP,Cluster_2,Shared
+GO:0030154,1,25,cell differentiation,BP,Cluster_2,Unique
+GO:0048856,1,25,anatomical structure development,BP,Cluster_2,Unique
+GO:0003824,4,30.76923077,catalytic activity,MF,Cluster_2,Shared
+GO:0005198,1,7.692307692,structural molecule activity,MF,Cluster_2,Unique
+GO:0008092,1,7.692307692,cytoskeletal protein binding,MF,Cluster_2,Unique
+GO:0016209,1,7.692307692,antioxidant activity,MF,Cluster_2,Unique
+GO:0016491,1,7.692307692,oxidoreductase activity,MF,Cluster_2,Shared
+GO:0016787,3,23.07692308,hydrolase activity,MF,Cluster_2,Shared
+GO:0140096,1,7.692307692,"catalytic activity, acting on a protein",MF,Cluster_2,Shared
+GO:0140098,1,7.692307692,"catalytic activity, acting on RNA",MF,Cluster_2,Shared
+GO:0006629,1,12.5,lipid metabolic process,BP,Cluster_3,Shared
+GO:0006790,1,12.5,sulfur compound metabolic process,BP,Cluster_3,Shared
+GO:0007031,1,12.5,peroxisome organization,BP,Cluster_3,Unique
+GO:0023052,2,25,signaling,BP,Cluster_3,Shared
+GO:0055086,2,25,nucleobase-containing small molecule metabolic process,BP,Cluster_3,Shared
+GO:1901135,1,12.5,carbohydrate derivative metabolic process,BP,Cluster_3,Unique
+GO:0003824,5,45.45454545,catalytic activity,MF,Cluster_3,Shared
+GO:0016491,1,9.090909091,oxidoreductase activity,MF,Cluster_3,Shared
+GO:0016740,2,18.18181818,transferase activity,MF,Cluster_3,Shared
+GO:0016787,2,18.18181818,hydrolase activity,MF,Cluster_3,Shared
+GO:0140098,1,9.090909091,"catalytic activity, acting on RNA",MF,Cluster_3,Shared
+GO:0006091,1,14.28571429,generation of precursor metabolites and energy,BP,Cluster_4,Unique
+GO:0006520,1,14.28571429,amino acid metabolic process,BP,Cluster_4,Unique
+GO:0006629,1,14.28571429,lipid metabolic process,BP,Cluster_4,Shared
+GO:0006790,1,14.28571429,sulfur compound metabolic process,BP,Cluster_4,Shared
+GO:0007010,1,14.28571429,cytoskeleton organization,BP,Cluster_4,Shared
+GO:0030163,1,14.28571429,protein catabolic process,BP,Cluster_4,Unique
+GO:0050877,1,14.28571429,nervous system process,BP,Cluster_4,Unique
+GO:0003723,1,6.666666667,RNA binding,MF,Cluster_4,Unique
+GO:0003824,4,26.66666667,catalytic activity,MF,Cluster_4,Shared
+GO:0005215,1,6.666666667,transporter activity,MF,Cluster_4,Shared
+GO:0008289,1,6.666666667,lipid binding,MF,Cluster_4,Shared
+GO:0016491,1,6.666666667,oxidoreductase activity,MF,Cluster_4,Shared
+GO:0016787,2,13.33333333,hydrolase activity,MF,Cluster_4,Shared
+GO:0016874,1,6.666666667,ligase activity,MF,Cluster_4,Unique
+GO:0140096,2,13.33333333,"catalytic activity, acting on a protein",MF,Cluster_4,Shared
+GO:0140097,1,6.666666667,"catalytic activity, acting on DNA",MF,Cluster_4,Unique
+GO:0140657,1,6.666666667,ATP-dependent activity,MF,Cluster_4,Shared

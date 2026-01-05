@@ -179,17 +179,7 @@ cat("4h:", length(sig_w_4v0), "→", length(sig_w_4v0_injury), "\n")
 # 1h: 1191 → 295 
 # 2h: 3028 → 755 
 # 4h: 2863 → 937 
-
-deg_counts <- bind_rows(
-  count_up_down(results_0h, "0 h"),
-  count_up_down(results_1h, "1 h"),
-  count_up_down(results_2h, "2 h"),
-  count_up_down(results_4h, "4 h")
-)
 ```
-
-
-
 
 
 # Upset plots
@@ -300,6 +290,86 @@ dev.off()
 ```
 
 
+Get gene lists of unique and shared genes from Upset plot
+```{r}
+# Function to get all possible intersections
+get_all_intersections <- function(gene_lists) {
+  n_sets <- length(gene_lists)
+  set_names <- names(gene_lists)
+  
+  results <- list()
+  
+  # Generate all possible combinations
+  for (size in 1:n_sets) {
+    combos <- combn(set_names, size, simplify = FALSE)
+    
+    for (combo in combos) {
+      # Get intersection of sets in combo
+      genes_in <- Reduce(intersect, gene_lists[combo])
+      
+      # Remove genes in sets not in combo
+      if (size < n_sets) {
+        sets_not_in <- setdiff(set_names, combo)
+        genes_not_in <- unique(unlist(gene_lists[sets_not_in]))
+        genes_in <- setdiff(genes_in, genes_not_in)
+      }
+      
+      if (length(genes_in) > 0) {
+        combo_name <- paste(combo, collapse = " ∩ ")
+        results[[combo_name]] <- genes_in
+      }
+    }
+  }
+  
+  return(results)
+}
+
+# Get all intersections
+all_intersections <- get_all_intersections(sig_genes_list)
+
+all_intersections$`Wounded_1h vs Wounded_0h ∩ Wounded_4h vs Wounded_0h`
+
+# Create summary with counts
+intersection_summary <- data.frame(
+  Intersection = names(all_intersections),
+  N_genes = sapply(all_intersections, length)
+) %>%
+  arrange(desc(N_genes))
+
+print(head(intersection_summary, 20))
+
+# Save top intersections
+#write.csv(intersection_summary, "all_intersection_summary.csv", row.names = FALSE)
+
+# Create a data frame with intersection names and their genes
+# Long format: one row for each gene in each intersection
+intersection_genes_long <- do.call(rbind, lapply(names(all_intersections), function(int_name) {
+  genes <- all_intersections[[int_name]]
+  data.frame(
+    Intersection = int_name,
+    Gene = genes,
+    stringsAsFactors = FALSE
+  )
+}))
+
+rownames(intersection_genes_long) <- intersection_genes_long$Gene
+
+Pdam_Gene_Names_Info %>% 
+  rownames_to_column("Gene") -> gene_names
+
+left_join(intersection_genes_long, gene_names, by = "Gene") -> intersection_genes_annotated
+
+annotated_gene_expression <- read_csv("../3_Results/Annotated_significant_DEG_lists_wounded_injury_filtered_contrasts.csv")
+
+annotated_gene_expression %>% 
+  dplyr::rename(Gene = Row.names) %>% 
+  right_join(., intersection_genes_annotated, by = "Gene") 
+
+# Save detailed gene list with annotations
+#write.csv(intersection_genes_annotated, "all_intersection_genes_annotated.csv", row.names = FALSE)
+```
+
+
 
 # Cluster analysis
 
@@ -332,7 +402,7 @@ p1<-ggplot(cluster_data, aes(x = hour, y = value, color = condition, group = gen
   facet_wrap(~ cluster, scales = "free_y", labeller = labeller(cluster = function(x) paste("Gene Cluster:", x))) +
   scale_color_manual(values = c("Control" = "steelblue", 
                                 "Wounded" = "red3")) +
-  labs(x = "Hour", y = "Normalized Expression", 
+  labs(x = "Hour", y = "Z-Score of Gene Abundance", 
        color = "Condition") +
   theme_bw(base_size = 14) +
   theme(strip.background = element_rect(fill = "gray90"),
@@ -354,19 +424,19 @@ for (i in 1:nrow(clusters$df)) {
   in_4h <- gene %in% sig_w_4v0_injury
   
   if (in_1h & in_2h & in_4h) {
-    clusters$df$intersection_group[i] <- "All_times"
+    clusters$df$intersection_group[i] <- "All time points"
   } else if (in_1h & in_2h & !in_4h) {
-    clusters$df$intersection_group[i] <- "1h_2h"
+    clusters$df$intersection_group[i] <- "Wounded 1h and Wounded 2h"
   } else if (in_1h & !in_2h & in_4h) {
-    clusters$df$intersection_group[i] <- "1h_4h"
+    clusters$df$intersection_group[i] <- "Wounded 1h and Wounded 4h"
   } else if (!in_1h & in_2h & in_4h) {
-    clusters$df$intersection_group[i] <- "2h_4h"
+    clusters$df$intersection_group[i] <- "Wounded 2h and Wounded 4h"
   } else if (in_1h & !in_2h & !in_4h) {
-    clusters$df$intersection_group[i] <- "1h_only"
+    clusters$df$intersection_group[i] <- "Wounded 1h"
   } else if (!in_1h & in_2h & !in_4h) {
-    clusters$df$intersection_group[i] <- "2h_only"
+    clusters$df$intersection_group[i] <- "Wounded 2h"
   } else if (!in_1h & !in_2h & in_4h) {
-    clusters$df$intersection_group[i] <- "4h_only"
+    clusters$df$intersection_group[i] <- "Wounded 4h"
   }
 }
 
@@ -374,7 +444,7 @@ for (i in 1:nrow(clusters$df)) {
 table(clusters$df$cluster, clusters$df$intersection_group)
 
 # Save this enriched data
-write.csv(clusters$df, "cluster_with_intersection_info.csv", row.names = FALSE)
+#write.csv(clusters$df, "cluster_with_intersection_info.csv", row.names = FALSE)
 
 
 # Get cluster data
@@ -386,17 +456,17 @@ cluster_summary <- clusters$df %>%
 p2<-ggplot(cluster_summary, aes(x = factor(cluster), y = count, fill = intersection_group)) +
   geom_bar(stat = "identity", color = "black") +
   scale_fill_manual(values = c(
-    "All_times" = "#440154FF",
-    "1h_2h" = "#31688EFF",
-    "2h_4h" = "#35B779FF",
-    "1h_4h" = "#FDE724FF",
-    "1h_only" = "#EFC000FF",
-    "2h_only" = "#868686FF",
-    "4h_only" = "#CD534CFF"
+   "All time points" = "#440154FF",
+    "Wounded 1h and Wounded 2h" = "#31688EFF",
+    "Wounded 2h and Wounded 4h" = "#35B779FF",
+    "Wounded 1h and Wounded 4h" = "#FDE724FF",
+    "Wounded 1h" = "#EFC000FF",
+    "Wounded 2h" = "#868686FF",
+    "Wounded 4h" = "#CD534CFF"
   )) +
   labs(
        x = "Gene Cluster", y = "Number of Genes",
-       fill = "Time Point Pattern") +
+       fill = "Time Point") +
   theme_bw(base_size = 14) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -406,8 +476,8 @@ p2<-ggplot(cluster_summary, aes(x = factor(cluster), y = count, fill = intersect
 
 ```{r}
 # Combine the two plots
-ggarrange(p1, p2, ncol = 2, labels = c("A", "B"), widths = c(1.5,1))
-ggsave("cluster_analysis_combined.pdf", width = 16, height = 8)
+ggarrange(p1, p2, ncol = 1, labels = c("A", "B"), widths = c(1.5,1))
+ggsave("cluster_analysis_combined.pdf", width = 8, height = 10)
 ```
 
 

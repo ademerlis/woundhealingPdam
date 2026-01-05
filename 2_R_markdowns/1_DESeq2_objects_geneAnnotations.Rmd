@@ -217,6 +217,7 @@ annot_res_time %>%
 #   write.csv(file = "Annotated_significant_DEG_lists_lrt_contrasts.csv", row.names = FALSE)
 ```
 
+# Generate injury-specific genes 
 
 ```{r}
 sig_w_1v0 <- rownames(
@@ -289,18 +290,42 @@ annot_sig_w_1v0_injury<-na.omit(annot_sig_w_1v0_injury)
 annot_sig_w_1v0_injury %>% 
   mutate(contrast = "Wounded 1h vs 0h (injury-filtered)") -> annot_sig_w_1v0_injury_sig
 
+annot_sig_w_1v0_injury_sig %>% 
+  filter(log2FoldChange > 0) %>%
+  summarise(count = n()) #182
+
+annot_sig_w_1v0_injury_sig %>% 
+  filter(log2FoldChange <0) %>%
+  summarise(count = n()) #113
+
 annot_sig_w_2v0_injury<-merge(as.data.frame(res_w_2v0[sig_w_2v0_injury,]),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 annot_sig_w_2v0_injury<-na.omit(annot_sig_w_2v0_injury)
 annot_sig_w_2v0_injury %>% 
   mutate(contrast = "Wounded 2h vs 0h (injury-filtered)") -> annot_sig_w_2v0_injury_sig
+
+annot_sig_w_2v0_injury_sig %>% 
+  filter(log2FoldChange > 0) %>%
+  summarise(count = n()) #346
+
+annot_sig_w_2v0_injury_sig %>% 
+  filter(log2FoldChange <0) %>%
+  summarise(count = n()) #409
 
 annot_sig_w_4v0_injury<-merge(as.data.frame(res_w_4v0[sig_w_4v0_injury,]),Pdam_Gene_Names_Info,by='row.names',all=TRUE)
 annot_sig_w_4v0_injury<-na.omit(annot_sig_w_4v0_injury)
 annot_sig_w_4v0_injury %>% 
   mutate(contrast = "Wounded 4h vs 0h (injury-filtered)") -> annot_sig_w_4v0_injury_sig
 
+annot_sig_w_4v0_injury_sig %>%
+  filter(log2FoldChange > 0) %>%
+  summarise(count = n()) #414
+
+annot_sig_w_4v0_injury_sig %>%
+  filter(log2FoldChange <0) %>%
+  summarise(count = n()) #523
+
 #save annotated significant DEG lists as .csv files
-rbind(annot_sig_w_1v0_injury_sig, annot_sig_w_2v0_injury_sig, annot_sig_w_4v0_injury_sig) %>%
-  write.csv(file = "Annotated_significant_DEG_lists_wounded_injury_filtered_contrasts.csv", row.names = FALSE)
+# rbind(annot_sig_w_1v0_injury_sig, annot_sig_w_2v0_injury_sig, annot_sig_w_4v0_injury_sig) %>%
+#   write.csv(file = "Annotated_significant_DEG_lists_wounded_injury_filtered_contrasts.csv", row.names = FALSE)
 ```
 

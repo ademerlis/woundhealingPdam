@@ -75,7 +75,8 @@ head(gene_name_split_df)
 #convert the Gene_ID column to the row headers
 gene_name_split_df %>%
      remove_rownames() %>%
- column_to_rownames(var = 'Gene_ID')-> Pdam_Gene_Names_Info 
+ column_to_rownames(var = 'Gene_ID') %>% 
+mutate(Gene_Function = URLdecode(Gene_Function)) -> Pdam_Gene_Names_Info 
 ```
 
 

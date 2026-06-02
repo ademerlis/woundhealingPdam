@@ -1,0 +1,481 @@
+Gene,cluster,intersection_group,Gene_Function
+pdam_00000064,15,Wounded 2h,v1g174619: MAU2 chromatid cohesion factor homolog (Nematostella vectensis)
+pdam_00000163,15,Wounded 2h,Pias1: E3 SUMO-protein ligase PIAS1 (Mus musculus)
+pdam_00000410,15,Wounded 2h,KCTD10: BTB/POZ domain-containing adapter for CUL3-mediated RhoA degradation protein 3 (Homo sapiens)
+pdam_00000413,22,Wounded 4h,PIPOX: Peroxisomal sarcosine oxidase (Homo sapiens)
+pdam_00000529,21,Wounded 1h,ttc34: Tetratricopeptide repeat protein 34 (Xenopus laevis)
+pdam_00000555,22,Wounded 4h,rhot1a: Mitochondrial Rho GTPase 1-A (Danio rerio)
+pdam_00000646,24,Wounded 2h,phf10: PHD finger protein 10 (Xenopus laevis)
+pdam_00000679,22,Wounded 4h,ENTPD5: Ectonucleoside triphosphate diphosphohydrolase 5 (Gallus gallus)
+pdam_00000728,24,Wounded 2h,unknown function
+pdam_00000926,22,Wounded 4h,MGAT4C: Alpha-1%2C3-mannosyl-glycoprotein 4-beta-N-acetylglucosaminyltransferase C (Gallus gallus)
+pdam_00000980,22,Wounded 4h,unknown function
+pdam_00001052,22,Wounded 2h and Wounded 4h,unknown function
+pdam_00001156,22,Wounded 4h,Cubn: Cubilin (Mus musculus)
+pdam_00001159,21,Wounded 4h,Gaa: Lysosomal alpha-glucosidase (Mus musculus)
+pdam_00001191,21,Wounded 4h,DSTYK: Dual serine/threonine and tyrosine protein kinase (Strongylocentrotus purpuratus)
+pdam_00001252,15,Wounded 2h,unknown function
+pdam_00001304,15,Wounded 2h,CAB39: Calcium-binding protein 39 (Homo sapiens)
+pdam_00001322,22,Wounded 4h,LSM1: U6 snRNA-associated Sm-like protein LSm1 (Bos taurus)
+pdam_00001390,22,Wounded 4h,v1g226489: Ragulator complex protein LAMTOR5 homolog (Nematostella vectensis)
+pdam_00001405,15,Wounded 2h,unknown function
+pdam_00001412,22,Wounded 4h,SULT1B1: Sulfotransferase family cytosolic 1B member 1 (Homo sapiens)
+pdam_00001428,24,Wounded 2h,BTN1: Protein BTN1 (Yarrowia lipolytica (strain CLIB 122 / E 150))
+pdam_00001456,22,Wounded 4h,Manf: Mesencephalic astrocyte-derived neurotrophic factor homolog (Drosophila grimshawi)
+pdam_00001557,21,Wounded 4h,unknown function
+pdam_00001610,24,Wounded 2h,UTP14A: U3 small nucleolar RNA-associated protein 14 homolog A (Bos taurus)
+pdam_00001657,21,Wounded 4h,LARS: Leucine--tRNA ligase%2C cytoplasmic (Homo sapiens)
+pdam_00001678,21,Wounded 4h,Srebf1: Sterol regulatory element-binding protein 1 (Mus musculus)
+pdam_00001687,22,Wounded 4h,FGF7: Fibroblast growth factor 7 (Pongo abelii)
+pdam_00001777,22,Wounded 4h,C7orf43: Uncharacterized protein C7orf43 (Homo sapiens)
+pdam_00001867,22,Wounded 4h,Taar9: Trace amine-associated receptor 9 (Rattus norvegicus)
+pdam_00001876,24,Wounded 2h,unknown function
+pdam_00001911,24,Wounded 2h,unknown function
+pdam_00002022,21,Wounded 4h,Ectin (Fragment) (Acropora millepora)
+pdam_00002081,24,Wounded 2h,NGR_a03790: Uncharacterized protein y4fB (Sinorhizobium fredii (strain NBRC 101917 / NGR234))
+pdam_00002117,15,Wounded 2h,Bnip1: Vesicle transport protein SEC20 (Mus musculus)
+pdam_00002138,15,Wounded 2h,KLKB1: Plasma kallikrein (Homo sapiens)
+pdam_00002139,21,Wounded 4h,unknown function
+pdam_00002162,21,Wounded 4h,Tcerg1: Transcription elongation regulator 1 (Mus musculus)
+pdam_00002213,22,Wounded 4h,unknown function
+pdam_00002219,21,Wounded 4h,Col1a2: Collagen alpha-2(I) chain (Rattus norvegicus)
+pdam_00002262,22,Wounded 4h,unknown function
+pdam_00002322,24,Wounded 2h,Mpdz: Multiple PDZ domain protein (Mus musculus)
+pdam_00002335,24,Wounded 2h,rps28: 40S ribosomal protein S28 (Ictalurus punctatus)
+pdam_00002400,21,Wounded 4h,C20orf96: Uncharacterized protein C20orf96 (Homo sapiens)
+pdam_00002402,24,Wounded 2h,COX4I2: Cytochrome c oxidase subunit 4 isoform 2%2C mitochondrial (Homo sapiens)
+pdam_00002431,22,Wounded 4h,mtbp: Mdm2-binding protein (Xenopus tropicalis)
+pdam_00002567,21,Wounded 4h,unknown function
+pdam_00002572,22,Wounded 4h,tll1: Tolloid-like protein 1 (Xenopus laevis)
+pdam_00002594,21,Wounded 4h,CAMSAP1: Calmodulin-regulated spectrin-associated protein 1 (Homo sapiens)
+pdam_00002651,22,Wounded 4h,ECHDC3: Enoyl-CoA hydratase domain-containing protein 3%2C mitochondrial (Homo sapiens)
+pdam_00002653,22,Wounded 4h,KCNQ5: Potassium voltage-gated channel subfamily KQT member 5 (Homo sapiens)
+pdam_00002699,21,Wounded 4h,SPON1: Spondin-1 (Gallus gallus)
+pdam_00002738,22,Wounded 4h,Gabbr2: Gamma-aminobutyric acid type B receptor subunit 2 (Rattus norvegicus)
+pdam_00002786,15,Wounded 4h,Trim2: Tripartite motif-containing protein 2 (Mus musculus)
+pdam_00002841,22,Wounded 4h,desi2: Desumoylating isopeptidase 2 (Xenopus laevis)
+pdam_00003040,22,Wounded 4h,LRRC14: Leucine-rich repeat-containing protein 14 (Homo sapiens)
+pdam_00003082,21,Wounded 4h,Copb2: Coatomer subunit beta' (Mus musculus)
+pdam_00003122,21,Wounded 4h,GOLIM4: Golgi integral membrane protein 4 (Homo sapiens)
+pdam_00003200,15,Wounded 2h,H6PD: GDH/6PGL endoplasmic bifunctional protein (Homo sapiens)
+pdam_00003219,24,Wounded 2h,
+pdam_00003377,15,Wounded 2h,M6pr: Cation-dependent mannose-6-phosphate receptor (Rattus norvegicus)
+pdam_00003402,24,Wounded 2h,DYNLT1: Dynein light chain Tctex-type 1 (Homo sapiens)
+pdam_00003408,24,Wounded 2h,DNAJC16: DnaJ homolog subfamily C member 16 (Homo sapiens)
+pdam_00003491,24,Wounded 2h,dcaf8: DDB1- and CUL4-associated factor 8 (Xenopus laevis)
+pdam_00003563,21,Wounded 2h and Wounded 4h,TMEM127: Transmembrane protein 127 (Homo sapiens)
+pdam_00003642,22,Wounded 4h,P4htm: Transmembrane prolyl 4-hydroxylase (Mus musculus)
+pdam_00003681,15,Wounded 4h,Cyp3a41a: Cytochrome P450 3A41 (Mus musculus)
+pdam_00003704,15,Wounded 4h,RPUSD4: RNA pseudouridylate synthase domain-containing protein 4 (Homo sapiens)
+pdam_00003711,15,Wounded 2h,mapre1: Microtubule-associated protein RP/EB family member 1 (Xenopus tropicalis)
+pdam_00003714,24,Wounded 2h,HDAC1: Histone deacetylase 1 (Gallus gallus)
+pdam_00003718,24,Wounded 2h,rps21: 40S ribosomal protein S21 (Ictalurus punctatus)
+pdam_00003809,15,Wounded 2h,STX5: Syntaxin-5 (Bos taurus)
+pdam_00003959,15,Wounded 2h,unknown function
+pdam_00003993,24,Wounded 2h,unknown function
+pdam_00004033,24,Wounded 2h,SF3A2: Splicing factor 3A subunit 2 (Homo sapiens)
+pdam_00004048,15,Wounded 2h,Bmpr1b: Bone morphogenetic protein receptor type-1B (Mus musculus)
+pdam_00004195,24,Wounded 2h,SLC7A3: Cationic amino acid transporter 3 (Homo sapiens)
+pdam_00004236,24,Wounded 2h,wipi2: WD repeat domain phosphoinositide-interacting protein 2 (Xenopus laevis)
+pdam_00004277,15,Wounded 2h,GAB1: GRB2-associated-binding protein 1 (Homo sapiens)
+pdam_00004340,22,Wounded 4h,foxred1: FAD-dependent oxidoreductase domain-containing protein 1 (Xenopus laevis)
+pdam_00004503,24,Wounded 2h,Slc5a8: Sodium-coupled monocarboxylate transporter 1 (Mus musculus)
+pdam_00004509,22,Wounded 4h,emc6: ER membrane protein complex subunit 6 (Xenopus tropicalis)
+pdam_00004554,22,Wounded 4h,Tyms: Thymidylate synthase (Mus musculus)
+pdam_00004615,22,Wounded 4h,Dpy19l3: Probable C-mannosyltransferase DPY19L3 (Mus musculus)
+pdam_00004637,22,Wounded 4h,lysA: Diaminopimelate decarboxylase (Zymomonas mobilis subsp. mobilis (strain ATCC 31821 / ZM4 / CP4))
+pdam_00004654,21,Wounded 4h,ZNFX1: NFX1-type zinc finger-containing protein 1 (Homo sapiens)
+pdam_00004803,15,Wounded 2h,unknown function
+pdam_00004842,24,Wounded 2h,unknown function
+pdam_00004859,22,Wounded 4h,OXSM: 3-oxoacyl-[acyl-carrier-protein] synthase%2C mitochondrial (Homo sapiens)
+pdam_00004870,15,Wounded 2h,rft1: Protein RFT1 homolog (Xenopus tropicalis)
+pdam_00004897,15,Wounded 2h,SNX4: Sorting nexin-4 (Pongo abelii)
+pdam_00004932,15,Wounded 2h,Grb14: Growth factor receptor-bound protein 14 (Rattus norvegicus)
+pdam_00004953,22,Wounded 2h and Wounded 4h,unknown function
+pdam_00005102,15,Wounded 2h,unknown function
+pdam_00005117,21,Wounded 4h,ATF7IP: Activating transcription factor 7-interacting protein 1 (Gallus gallus)
+pdam_00005129,21,Wounded 4h,ADRB1: Beta-1 adrenergic receptor (Meleagris gallopavo)
+pdam_00005161,22,Wounded 2h and Wounded 4h,unknown function
+pdam_00005301,24,Wounded 2h,unknown function
+pdam_00005348,22,Wounded 4h,CWC27: Peptidyl-prolyl cis-trans isomerase CWC27 homolog (Homo sapiens)
+pdam_00005368,15,Wounded 2h,Mlxipl: Carbohydrate-responsive element-binding protein (Mus musculus)
+pdam_00005490,22,Wounded 4h,tmem53: Transmembrane protein 53 (Danio rerio)
+pdam_00005595,24,Wounded 2h,GTPBP4: Nucleolar GTP-binding protein 1 (Homo sapiens)
+pdam_00005626,24,Wounded 2h,Skeletal aspartic acid-rich protein 1 (Acropora millepora)
+pdam_00005719,22,Wounded 4h,LCMT1: Leucine carboxyl methyltransferase 1 (Homo sapiens)
+pdam_00005768,15,Wounded 1h and Wounded 2h,unknown function
+pdam_00005815,15,Wounded 2h,Sec22a: Vesicle-trafficking protein SEC22a (Rattus norvegicus)
+pdam_00005839,21,Wounded 4h,unknown function
+pdam_00005848,24,Wounded 2h,unknown function
+pdam_00005850,21,Wounded 4h,unknown function
+pdam_00005882,21,Wounded 4h,col27a1b: Collagen alpha-1(XXVII) chain B (Danio rerio)
+pdam_00005904,24,Wounded 2h,Acot11: Acyl-coenzyme A thioesterase 11 (Mus musculus)
+pdam_00005912,22,Wounded 4h,coa7-b: Cytochrome c oxidase assembly factor 7B (Xenopus laevis)
+pdam_00005930,24,Wounded 2h,tctex1d1-b: Tctex1 domain-containing protein 1-B (Fragment) (Xenopus laevis)
+pdam_00006084,15,Wounded 2h,Usp4: Ubiquitin carboxyl-terminal hydrolase 4 (Rattus norvegicus)
+pdam_00006144,22,Wounded 4h,Rab3: Ras-related protein Rab-3 (Drosophila melanogaster)
+pdam_00006188,24,Wounded 2h,Mrps25: 28S ribosomal protein S25%2C mitochondrial (Mus musculus)
+pdam_00006271,22,Wounded 4h,slc46a1: Proton-coupled folate transporter (Danio rerio)
+pdam_00006314,24,Wounded 2h,sox3: Transcription factor Sox-3 (Danio rerio)
+pdam_00006347,22,Wounded 4h,PLEKHM2: Pleckstrin homology domain-containing family M member 2 (Homo sapiens)
+pdam_00006393,15,Wounded 2h,cptp: Ceramide-1-phosphate transfer protein (Danio rerio)
+pdam_00006425,24,Wounded 1h and Wounded 2h,ZC3H10: Zinc finger CCCH domain-containing protein 10 (Homo sapiens)
+pdam_00006440,22,Wounded 4h,SSBP1: Single-stranded DNA-binding protein%2C mitochondrial (Bos taurus)
+pdam_00006592,15,Wounded 4h,TMEM167A: Protein kish-A (Taeniopygia guttata)
+pdam_00006682,24,Wounded 2h,PWP1: Periodic tryptophan protein 1 homolog (Bos taurus)
+pdam_00006697,22,Wounded 4h,ALG8: Probable dolichyl pyrophosphate Glc1Man9GlcNAc2 alpha-1%2C3-glucosyltransferase (Homo sapiens)
+pdam_00006732,22,Wounded 2h and Wounded 4h,NEU1: Sialidase-1 (Bos taurus)
+pdam_00006844,22,Wounded 4h,tmem18: Transmembrane protein 18 (Danio rerio)
+pdam_00006984,24,Wounded 2h,unknown function
+pdam_00007012,21,Wounded 4h,unknown function
+pdam_00007016,21,Wounded 4h,aldh9a1a: Aldehyde dehydrogenase family 9 member A1-A (Danio rerio)
+pdam_00007061,15,All time points,Atp6v1f: V-type proton ATPase subunit F (Rattus norvegicus)
+pdam_00007144,15,Wounded 2h,DPAGT1: UDP-N-acetylglucosamine--dolichyl-phosphate N-acetylglucosaminephosphotransferase (Cricetulus griseus)
+pdam_00007157,15,Wounded 2h,CRBN: Protein cereblon (Gallus gallus)
+pdam_00007213,15,Wounded 2h,PEAMT: Phosphoethanolamine N-methyltransferase (Spinacia oleracea)
+pdam_00007314,22,Wounded 4h,tmem135: Transmembrane protein 135 (Xenopus laevis)
+pdam_00007394,15,Wounded 2h,efnb2a: Ephrin-B2a (Danio rerio)
+pdam_00007493,22,Wounded 4h,Asb13: Ankyrin repeat and SOCS box protein 13 (Mus musculus)
+pdam_00007763,22,Wounded 4h,Zdhhc22: Palmitoyltransferase ZDHHC22 (Rattus norvegicus)
+pdam_00007817,21,Wounded 4h,Uncharacterized skeletal organic matrix protein 5 (Acropora millepora)
+pdam_00007836,15,Wounded 2h,unknown function
+pdam_00007846,22,Wounded 2h and Wounded 4h,NDOR1: NADPH-dependent diflavin oxidoreductase 1 (Bos taurus)
+pdam_00007971,21,Wounded 4h,Col27a1: Collagen alpha-1(XXVII) chain (Mus musculus)
+pdam_00007999,21,Wounded 4h,Acsl4: Long-chain-fatty-acid--CoA ligase 4 (Mus musculus)
+pdam_00008004,22,Wounded 4h,ADAMTSL1: ADAMTS-like protein 1 (Homo sapiens)
+pdam_00008076,15,Wounded 2h,chordc1: Cysteine and histidine-rich domain-containing protein 1 (Xenopus laevis)
+pdam_00008152,15,Wounded 2h,Crhr1: Corticotropin-releasing factor receptor 1 (Rattus norvegicus)
+pdam_00008304,22,Wounded 4h,unknown function
+pdam_00008338,22,Wounded 4h,Rsl24d1: Probable ribosome biogenesis protein RLP24 (Mus musculus)
+pdam_00008373,21,Wounded 4h,Nf1: Neurofibromin (Rattus norvegicus)
+pdam_00008395,24,Wounded 2h,Dlgap5: Disks large-associated protein 5 (Mus musculus)
+pdam_00008452,15,Wounded 2h,ISCW010018: Uncharacterized protein NCBP2-AS2 homolog (Ixodes scapularis)
+pdam_00008510,21,Wounded 4h,unknown function
+pdam_00008513,21,Wounded 4h,rsph1: Radial spoke head 1 homolog (Cyprinus carpio)
+pdam_00008551,15,Wounded 2h,nop16: Nucleolar protein 16 (Tetraodon nigroviridis)
+pdam_00008603,21,Wounded 4h,unknown function
+pdam_00008609,15,Wounded 2h,unknown function
+pdam_00008670,15,Wounded 2h,unknown function
+pdam_00008677,15,Wounded 2h,zmynd10: Zinc finger MYND domain-containing protein 10 (Danio rerio)
+pdam_00008721,21,Wounded 4h,unknown function
+pdam_00008722,15,Wounded 1h and Wounded 2h,TUSC2: Tumor suppressor candidate 2 (Homo sapiens)
+pdam_00008828,22,Wounded 4h,taf1b: TATA box-binding protein-associated factor RNA polymerase I subunit B (Xenopus laevis)
+pdam_00008853,21,Wounded 4h,CTSC: Dipeptidyl peptidase 1 (Homo sapiens)
+pdam_00008912,22,Wounded 4h,ca2: Carbonic anhydrase 2 (Tribolodon hakonensis)
+pdam_00008920,24,Wounded 2h,Sox4: Transcription factor SOX-4 (Mus musculus)
+pdam_00008960,15,Wounded 2h,unknown function
+pdam_00008986,24,Wounded 2h,COX19: Cytochrome c oxidase assembly protein COX19 (Bos taurus)
+pdam_00009027,15,Wounded 1h and Wounded 2h,unknown function
+pdam_00009070,15,Wounded 2h,Ubox5: RING finger protein 37 (Mus musculus)
+pdam_00009093,22,Wounded 4h,PTCD3: Pentatricopeptide repeat domain-containing protein 3%2C mitochondrial (Pongo abelii)
+pdam_00009119,24,Wounded 2h,Sowaha: Ankyrin repeat domain-containing protein SOWAHA (Mus musculus)
+pdam_00009230,22,Wounded 4h,Ola1: Obg-like ATPase 1 (Rattus norvegicus)
+pdam_00009245,22,Wounded 2h and Wounded 4h,unknown function
+pdam_00009321,22,Wounded 4h,flw: Serine/threonine-protein phosphatase beta isoform (Drosophila melanogaster)
+pdam_00009344,22,Wounded 4h,unknown function
+pdam_00009414,21,Wounded 4h,CELA2B: Chymotrypsin-like elastase family member 2B (Homo sapiens)
+pdam_00009441,15,Wounded 1h and Wounded 2h,ftt-2: 14-3-3-like protein 2 (Caenorhabditis elegans)
+pdam_00009451,21,Wounded 4h,pan: Protein pangolin%2C isoforms A/H/I/S (Drosophila melanogaster)
+pdam_00009468,24,Wounded 2h,TTC28: Tetratricopeptide repeat protein 28 (Homo sapiens)
+pdam_00009485,22,Wounded 4h,Itfg2: Integrin-alpha FG-GAP repeat-containing protein 2 (Mus musculus)
+pdam_00009534,21,Wounded 4h,cwf19l2: CWF19-like protein 2 (Danio rerio)
+pdam_00009550,21,Wounded 4h,sap30l: Histone deacetylase complex subunit SAP30L (Danio rerio)
+pdam_00009553,22,Wounded 2h and Wounded 4h,KIAA0391: Mitochondrial ribonuclease P protein 3 (Homo sapiens)
+pdam_00009659,24,Wounded 2h,selenoo: Selenoprotein O (Danio rerio)
+pdam_00009723,21,Wounded 4h,Allene oxide synthase-lipoxygenase protein (Plexaura homomalla)
+pdam_00009789,22,Wounded 4h,unknown function
+pdam_00009936,21,Wounded 4h,unknown function
+pdam_00009938,21,Wounded 4h,SND1: Staphylococcal nuclease domain-containing protein 1 (Pongo abelii)
+pdam_00010000,15,Wounded 2h,Adora2a: Adenosine receptor A2a (Mus musculus)
+pdam_00010012,22,Wounded 4h,Tll1: Tolloid-like protein 1 (Mus musculus)
+pdam_00010105,21,Wounded 4h,CEP350: Centrosome-associated protein 350 (Homo sapiens)
+pdam_00010155,15,Wounded 2h,TFG: Protein TFG (Homo sapiens)
+pdam_00010183,21,Wounded 2h and Wounded 4h,MTMR10: Myotubularin-related protein 10 (Homo sapiens)
+pdam_00010218,15,Wounded 2h,TMEM244: Transmembrane protein 244 (Homo sapiens)
+pdam_00010273,21,Wounded 4h,CPAMD8: C3 and PZP-like alpha-2-macroglobulin domain-containing protein 8 (Homo sapiens)
+pdam_00010350,15,Wounded 2h,Antxr2: Anthrax toxin receptor 2 (Mus musculus)
+pdam_00010392,24,Wounded 2h,LWamide neuropeptides (Anthopleura elegantissima)
+pdam_00010473,15,Wounded 2h,Slc35b3: Adenosine 3'-phospho 5'-phosphosulfate transporter 2 (Mus musculus)
+pdam_00010489,24,Wounded 2h,Ester hydrolase C11orf54 homolog (Bos taurus)
+pdam_00010518,22,Wounded 4h,unknown function
+pdam_00010542,22,Wounded 4h,Enpep: Glutamyl aminopeptidase (Mus musculus)
+pdam_00010551,24,Wounded 2h,poc5: Centrosomal protein POC5 (Xenopus laevis)
+pdam_00010556,15,Wounded 2h,RNF180: E3 ubiquitin-protein ligase RNF180 (Pongo abelii)
+pdam_00010610,24,Wounded 2h,LCT: Lactase-phlorizin hydrolase (Homo sapiens)
+pdam_00010615,21,Wounded 4h,CCNT1: Cyclin-T1 (Equus caballus)
+pdam_00010655,21,Wounded 4h,C9orf78: Uncharacterized protein C9orf78 (Homo sapiens)
+pdam_00010658,24,Wounded 2h,Colec12: Collectin-12 (Rattus norvegicus)
+pdam_00010693,21,Wounded 4h,PITPNA: Phosphatidylinositol transfer protein alpha isoform (Oryctolagus cuniculus)
+pdam_00010825,15,Wounded 4h,Dctn5: Dynactin subunit 5 (Mus musculus)
+pdam_00010937,24,Wounded 2h and Wounded 4h,THNSL1: Threonine synthase-like 1 (Pongo abelii)
+pdam_00010948,15,Wounded 2h,NPFFR2: Neuropeptide FF receptor 2 (Homo sapiens)
+pdam_00011129,15,Wounded 2h,unknown function
+pdam_00011237,21,Wounded 4h,unknown function
+pdam_00011277,24,Wounded 2h,RPL7: 60S ribosomal protein L7 (Pongo abelii)
+pdam_00011338,24,Wounded 2h,TP53BP2: Apoptosis-stimulating of p53 protein 2 (Homo sapiens)
+pdam_00011365,24,Wounded 2h,NDUFB9: NADH dehydrogenase [ubiquinone] 1 beta subcomplex subunit 9 (Gorilla gorilla gorilla)
+pdam_00011451,22,Wounded 4h,Sms: Spermine synthase (Mus musculus)
+pdam_00011461,15,Wounded 2h,FAM76A: Protein FAM76A (Gallus gallus)
+pdam_00011467,15,Wounded 2h,timm13-b: Mitochondrial import inner membrane translocase subunit Tim13-B (Xenopus laevis)
+pdam_00011616,21,Wounded 4h,WAC: WW domain-containing adapter protein with coiled-coil (Homo sapiens)
+pdam_00011701,15,Wounded 2h,TTC1: Tetratricopeptide repeat protein 1 (Homo sapiens)
+pdam_00011764,21,Wounded 4h,ZNF143: Zinc finger protein 143 (Homo sapiens)
+pdam_00011811,24,Wounded 2h,l(2)03659: Probable multidrug resistance-associated protein lethal(2)03659 (Drosophila melanogaster)
+pdam_00011940,24,Wounded 2h,Histone H2A (Acropora formosa)
+pdam_00011951,15,Wounded 2h,CHIC2: Cysteine-rich hydrophobic domain-containing protein 2 (Homo sapiens)
+pdam_00011981,24,Wounded 2h,unknown function
+pdam_00011995,21,Wounded 4h,HECTD1: E3 ubiquitin-protein ligase HECTD1 (Homo sapiens)
+pdam_00012041,15,Wounded 2h,Scfd1: Sec1 family domain-containing protein 1 (Mus musculus)
+pdam_00012091,21,Wounded 4h,EIF4ENIF1: Eukaryotic translation initiation factor 4E transporter (Homo sapiens)
+pdam_00012101,15,Wounded 2h,BR3: Balbiani ring protein 3 (Chironomus tentans)
+pdam_00012206,24,Wounded 2h,unknown function
+pdam_00012218,21,Wounded 4h,Adamts15: A disintegrin and metalloproteinase with thrombospondin motifs 15 (Mus musculus)
+pdam_00012232,24,Wounded 2h,SLC37A2: Glucose-6-phosphate exchanger SLC37A2 (Bos taurus)
+pdam_00012255,15,Wounded 2h,Oma1: Metalloendopeptidase OMA1%2C mitochondrial (Rattus norvegicus)
+pdam_00012368,15,Wounded 2h,lhpp: Phospholysine phosphohistidine inorganic pyrophosphate phosphatase (Danio rerio)
+pdam_00012451,21,Wounded 4h,Fibronectin type III domain-containing protein (Acropora millepora)
+pdam_00012452,21,Wounded 4h,Fibronectin type III domain-containing protein (Acropora millepora)
+pdam_00012551,22,Wounded 4h,ASMTL: N-acetylserotonin O-methyltransferase-like protein (Homo sapiens)
+pdam_00012554,24,Wounded 2h,CEP135: Centrosomal protein of 135 kDa (Homo sapiens)
+pdam_00012668,24,Wounded 2h,unknown function
+pdam_00012697,15,Wounded 2h,AUG2: AUGMIN subunit 2 (Arabidopsis thaliana)
+pdam_00012803,15,Wounded 2h,unknown function
+pdam_00012811,21,Wounded 4h,unknown function
+pdam_00012869,21,Wounded 4h,Sdc: Syndecan (Drosophila melanogaster)
+pdam_00012938,22,Wounded 4h,smc4: Structural maintenance of chromosomes protein 4 (Xenopus laevis)
+pdam_00012973,15,Wounded 1h and Wounded 2h,Trim23: E3 ubiquitin-protein ligase TRIM23 (Mus musculus)
+pdam_00013035,24,Wounded 2h,unknown function
+pdam_00013106,22,Wounded 4h,NAA40: N-alpha-acetyltransferase 40 (Homo sapiens)
+pdam_00013147,15,Wounded 2h,ADGRL2: Adhesion G protein-coupled receptor L2 (Homo sapiens)
+pdam_00013154,15,Wounded 2h,PAIP1: Polyadenylate-binding protein-interacting protein 1 (Homo sapiens)
+pdam_00013177,15,Wounded 2h,AP1M1: AP-1 complex subunit mu-1 (Homo sapiens)
+pdam_00013207,22,Wounded 4h,Adra1b: Alpha-1B adrenergic receptor (Mus musculus)
+pdam_00013211,22,Wounded 4h,Cep70: Centrosomal protein of 70 kDa (Mus musculus)
+pdam_00013235,24,Wounded 2h,ceeh-1: Epoxide hydrolase 1 (Caenorhabditis elegans)
+pdam_00013243,15,Wounded 2h,Elavl1: ELAV-like protein 1 (Rattus norvegicus)
+pdam_00013305,21,Wounded 2h,WDTC1: WD and tetratricopeptide repeats protein 1 (Homo sapiens)
+pdam_00013314,15,Wounded 2h,Faap100: Fanconi anemia core complex-associated protein 100 (Mus musculus)
+pdam_00013325,21,Wounded 4h,Map3k7: Mitogen-activated protein kinase kinase kinase 7 (Mus musculus)
+pdam_00013344,22,Wounded 4h,MXAN_0863: UPF0061 protein MXAN_0863 (Myxococcus xanthus (strain DK 1622))
+pdam_00013395,15,Wounded 2h,Psma4: Proteasome subunit alpha type-4 (Rattus norvegicus)
+pdam_00013412,22,Wounded 4h,RGSL1: Regulator of G-protein signaling protein-like (Homo sapiens)
+pdam_00013420,21,Wounded 4h,SLC7A9: b(0%2C+)-type amino acid transporter 1 (Homo sapiens)
+pdam_00013529,21,Wounded 4h,unknown function
+pdam_00013531,21,Wounded 4h,HECTD1: E3 ubiquitin-protein ligase HECTD1 (Homo sapiens)
+pdam_00013566,24,Wounded 2h,wdr70: WD repeat-containing protein 70 (Xenopus tropicalis)
+pdam_00013674,22,Wounded 4h,unknown function
+pdam_00013680,15,Wounded 2h,Gal3st3: Galactose-3-O-sulfotransferase 3 (Mus musculus)
+pdam_00013711,21,Wounded 4h,unknown function
+pdam_00013810,15,Wounded 2h,FGF17: Fibroblast growth factor 17 (Homo sapiens)
+pdam_00013882,22,Wounded 4h,Rpp38: Ribonuclease P protein subunit p38 (Mus musculus)
+pdam_00013943,22,Wounded 4h,WDR41: WD repeat-containing protein 41 (Homo sapiens)
+pdam_00013980,24,Wounded 2h,YWHAE: 14-3-3 protein epsilon (Ovis aries)
+pdam_00014018,21,Wounded 4h,SHH: Sonic hedgehog protein (Gallus gallus)
+pdam_00014045,15,Wounded 2h,glmp-b: Glycosylated lysosomal membrane protein B (Xenopus laevis)
+pdam_00014060,15,Wounded 2h,Snx27: Sorting nexin-27 (Mus musculus)
+pdam_00014171,21,Wounded 4h,unknown function
+pdam_00014186,21,Wounded 4h,unknown function
+pdam_00014288,21,Wounded 4h,NPC2: Epididymal secretory protein E1 (Pan troglodytes)
+pdam_00014339,24,Wounded 2h,unknown function
+pdam_00014459,15,Wounded 4h,unknown function
+pdam_00014474,22,Wounded 4h,rost: Protein rolling stone (Drosophila melanogaster)
+pdam_00014530,24,Wounded 2h,unknown function
+pdam_00014535,22,Wounded 4h,unknown function
+pdam_00014540,22,Wounded 4h,slc37a2: Glucose-6-phosphate exchanger SLC37A2 (Danio rerio)
+pdam_00014715,21,Wounded 4h,Meltf: Melanotransferrin (Mus musculus)
+pdam_00014819,21,Wounded 4h,unknown function
+pdam_00014852,22,Wounded 4h,tie1: Tyrosine-protein kinase receptor Tie-1 (Fragment) (Danio rerio)
+pdam_00014865,22,Wounded 4h,unknown function
+pdam_00014917,15,Wounded 1h and Wounded 2h,Rubcn: Run domain Beclin-1-interacting and cysteine-rich domain-containing protein (Mus musculus)
+pdam_00014962,15,Wounded 2h,CHKA: Choline kinase alpha (Homo sapiens)
+pdam_00015009,24,Wounded 2h,rbm8a: RNA-binding protein 8A (Salmo salar)
+pdam_00015066,21,Wounded 4h,unknown function
+pdam_00015149,21,Wounded 4h,WBC30: Putative white-brown complex homolog protein 30 (Arabidopsis thaliana)
+pdam_00015161,22,Wounded 4h,Xrcc4: DNA repair protein XRCC4 (Mus musculus)
+pdam_00015192,24,Wounded 2h,BPNT1: 3'(2')%2C5'-bisphosphate nucleotidase 1 (Homo sapiens)
+pdam_00015207,22,Wounded 4h,TTC27: Tetratricopeptide repeat protein 27 (Gallus gallus)
+pdam_00015319,15,Wounded 2h,Wdr19: WD repeat-containing protein 19 (Mus musculus)
+pdam_00015372,24,Wounded 2h,calA: Calmodulin (Dictyostelium discoideum)
+pdam_00015385,22,Wounded 4h,CDKN3: Cyclin-dependent kinase inhibitor 3 (Homo sapiens)
+pdam_00015395,24,Wounded 2h,CaMKI: Calcium/calmodulin-dependent protein kinase type 1 (Macrobrachium nipponense)
+pdam_00015403,21,Wounded 4h,Plcg1: 1-phosphatidylinositol 4%2C5-bisphosphate phosphodiesterase gamma-1 (Mus musculus)
+pdam_00015423,15,Wounded 2h,slc46a1: Proton-coupled folate transporter (Danio rerio)
+pdam_00015426,21,Wounded 4h,macrod2: O-acetyl-ADP-ribose deacetylase MACROD2 (Xenopus laevis)
+pdam_00015431,24,Wounded 2h,Uncharacterized skeletal organic matrix protein 5 (Acropora millepora)
+pdam_00015455,15,Wounded 1h and Wounded 2h,TOMM20: Mitochondrial import receptor subunit TOM20 homolog (Pongo abelii)
+pdam_00015495,22,Wounded 4h,MRPL17: 39S ribosomal protein L17%2C mitochondrial (Homo sapiens)
+pdam_00015691,22,Wounded 4h,SCD: Acyl-CoA desaturase (Bos taurus)
+pdam_00015712,22,Wounded 4h,hibch: 3-hydroxyisobutyryl-CoA hydrolase%2C mitochondrial (Danio rerio)
+pdam_00015787,24,Wounded 1h and Wounded 2h,TDG: G/T mismatch-specific thymine DNA glycosylase (Homo sapiens)
+pdam_00015836,15,Wounded 2h,AP4S1: AP-4 complex subunit sigma-1 (Homo sapiens)
+pdam_00015861,15,Wounded 2h,F13H10.3: Sodium-coupled neutral amino acid transporter 9 homolog (Caenorhabditis elegans)
+pdam_00015929,21,Wounded 4h,Hephaestin-like protein (Acropora millepora)
+pdam_00015960,21,Wounded 4h,PLEKHB2: Pleckstrin homology domain-containing family B member 2 (Pongo abelii)
+pdam_00015967,21,Wounded 4h,Equistatin (Actinia equina)
+pdam_00015998,22,Wounded 4h,Wdr31: WD repeat-containing protein 31 (Mus musculus)
+pdam_00016177,22,Wounded 4h,APLF: Aprataxin and PNK-like factor (Homo sapiens)
+pdam_00016206,24,Wounded 2h,unknown function
+pdam_00016216,24,Wounded 2h,mshA: D-inositol 3-phosphate glycosyltransferase (Nocardioides sp. (strain ATCC BAA-499 / JS614))
+pdam_00016288,22,Wounded 4h,mrps7: 28S ribosomal protein S7%2C mitochondrial (Danio rerio)
+pdam_00016409,15,Wounded 2h,GTSF1: Gametocyte-specific factor 1 (Macaca fascicularis)
+pdam_00016428,24,Wounded 2h,serhl: Serine hydrolase-like protein (Danio rerio)
+pdam_00016495,15,Wounded 1h,unknown function
+pdam_00016544,15,Wounded 2h,Gfpt1: Glutamine--fructose-6-phosphate aminotransferase [isomerizing] 1 (Rattus norvegicus)
+pdam_00016580,24,Wounded 2h,GNG11: Guanine nucleotide-binding protein G(I)/G(S)/G(O) subunit gamma-11 (Bos taurus)
+pdam_00016598,21,Wounded 4h,TP73: Tumor protein p73 (Chlorocebus aethiops)
+pdam_00016713,22,Wounded 2h and Wounded 4h,Rpusd2: RNA pseudouridylate synthase domain-containing protein 2 (Mus musculus)
+pdam_00016714,15,Wounded 1h,BRAFLDRAFT_58504: Anamorsin homolog (Branchiostoma floridae)
+pdam_00016844,21,Wounded 4h,unknown function
+pdam_00017201,21,Wounded 4h,gtpA: GTP-binding protein A (Dictyostelium discoideum)
+pdam_00017267,15,Wounded 2h,Galr2: Galanin receptor type 2 (Rattus norvegicus)
+pdam_00017275,22,Wounded 4h,unknown function
+pdam_00017339,24,Wounded 2h,unknown function
+pdam_00017479,24,Wounded 2h,CG12259: Protein FAM50 homolog (Drosophila melanogaster)
+pdam_00017587,22,Wounded 4h,FGFR: Fibroblast growth factor receptor (Halocynthia roretzi)
+pdam_00017611,22,Wounded 4h,unknown function
+pdam_00017664,15,Wounded 2h,Rnf166: RING finger protein 166 (Rattus norvegicus)
+pdam_00017747,22,Wounded 4h,unknown function
+pdam_00017759,22,Wounded 4h,unknown function
+pdam_00017780,21,Wounded 4h,MFSD12: Major facilitator superfamily domain-containing protein 12 (Homo sapiens)
+pdam_00017834,15,Wounded 2h,POLR2I: DNA-directed RNA polymerase II subunit RPB9 (Sus scrofa)
+pdam_00017986,15,Wounded 2h,Tprkb: EKC/KEOPS complex subunit Tprkb (Mus musculus)
+pdam_00017988,24,Wounded 2h,unknown function
+pdam_00018033,21,Wounded 4h,tll1: Dorsal-ventral patterning tolloid-like protein 1 (Danio rerio)
+pdam_00018106,21,Wounded 4h,Znf318: Zinc finger protein 318 (Fragment) (Mus musculus)
+pdam_00018127,15,Wounded 1h and Wounded 2h,HSPA5: 78 kDa glucose-regulated protein (Bos taurus)
+pdam_00018162,15,Wounded 2h,arl8ba: ADP-ribosylation factor-like protein 8B-A (Danio rerio)
+pdam_00018214,24,Wounded 2h,uba2: SUMO-activating enzyme subunit 2 (Xenopus tropicalis)
+pdam_00018250,22,Wounded 4h,Rnaseh2c: Ribonuclease H2 subunit C (Mus musculus)
+pdam_00018282,15,Wounded 2h,unknown function
+pdam_00018347,21,Wounded 4h,unknown function
+pdam_00018352,21,Wounded 2h and Wounded 4h,BAG3: BAG family molecular chaperone regulator 3 (Homo sapiens)
+pdam_00018404,22,Wounded 4h,Rfc1: Replication factor C subunit 1 (Mus musculus)
+pdam_00018508,22,Wounded 4h,Dermatopontin (Biomphalaria glabrata)
+pdam_00018541,24,Wounded 2h,Pde4d: cAMP-specific 3'%2C5'-cyclic phosphodiesterase 4D (Mus musculus)
+pdam_00018614,22,Wounded 4h,NCS1: Neuronal calcium sensor 1 (Pongo abelii)
+pdam_00018645,21,Wounded 4h,Tollip: Toll-interacting protein (Rattus norvegicus)
+pdam_00018669,22,Wounded 4h,unknown function
+pdam_00018734,24,Wounded 1h and Wounded 2h,RPGR: X-linked retinitis pigmentosa GTPase regulator (Homo sapiens)
+pdam_00018835,15,Wounded 2h,Rwdd2b: RWD domain-containing protein 2B (Mus musculus)
+pdam_00018886,24,Wounded 2h,Dnajc4: DnaJ homolog subfamily C member 4 (Mus musculus)
+pdam_00019032,15,Wounded 2h,TMEM128: Transmembrane protein 128 (Bos taurus)
+pdam_00019081,21,Wounded 4h,Kif14: Kinesin-like protein KIF14 (Mus musculus)
+pdam_00019180,22,Wounded 4h,MAM and fibronectin type III domain-containing protein 1 (Fragment) (Acropora millepora)
+pdam_00019281,15,Wounded 4h,unknown function
+pdam_00019292,24,Wounded 2h,gamt-a: Guanidinoacetate N-methyltransferase A (Xenopus laevis)
+pdam_00019345,15,Wounded 2h,zgpat: Zinc finger CCCH-type with G patch domain-containing protein (Danio rerio)
+pdam_00019365,22,Wounded 1h,trim71: E3 ubiquitin-protein ligase TRIM71 (Xenopus tropicalis)
+pdam_00019379,22,Wounded 4h,unknown function
+pdam_00019388,22,Wounded 4h,unknown function
+pdam_00019448,21,Wounded 4h,TMC7: Transmembrane channel-like protein 7 (Macaca fascicularis)
+pdam_00019501,21,Wounded 4h,Athl1: Acid trehalase-like protein 1 (Mus musculus)
+pdam_00019569,15,All time points,FBXL20: F-box/LRR-repeat protein 20 (Homo sapiens)
+pdam_00019589,21,Wounded 2h and Wounded 4h,Pxdn: Peroxidasin homolog (Mus musculus)
+pdam_00019602,21,Wounded 1h,unknown function
+pdam_00019648,22,Wounded 4h,G6PD: Glucose-6-phosphate 1-dehydrogenase (Macropus robustus)
+pdam_00019683,21,Wounded 4h,HS1BP3: HCLS1-binding protein 3 (Homo sapiens)
+pdam_00019706,24,Wounded 2h,FGF2: Fibroblast growth factor 2 (Monodelphis domestica)
+pdam_00019733,24,Wounded 2h,Atpalpha: Sodium/potassium-transporting ATPase subunit alpha (Drosophila melanogaster)
+pdam_00019824,22,Wounded 4h,POLR3H: DNA-directed RNA polymerase III subunit RPC8 (Homo sapiens)
+pdam_00019828,24,Wounded 2h,ACTII: Actin-2 (Echinococcus granulosus)
+pdam_00019979,15,Wounded 2h,unknown function
+pdam_00020004,24,Wounded 2h,Mfn2: Mitofusin-2 (Mus musculus)
+pdam_00020058,24,Wounded 2h,unknown function
+pdam_00020086,24,Wounded 2h,Amacr: Alpha-methylacyl-CoA racemase (Rattus norvegicus)
+pdam_00020096,24,Wounded 2h,Iqsec1: IQ motif and SEC7 domain-containing protein 1 (Mus musculus)
+pdam_00020171,24,Wounded 2h,unknown function
+pdam_00020184,15,Wounded 2h,unknown function
+pdam_00020188,15,Wounded 2h,Jkamp: JNK1/MAPK8-associated membrane protein (Mus musculus)
+pdam_00020205,15,Wounded 2h,v1g209471: UPF0669 protein v1g209471 (Nematostella vectensis)
+pdam_00020215,22,Wounded 4h,PDHA1: Pyruvate dehydrogenase E1 component subunit alpha%2C somatic form%2C mitochondrial (Bos taurus)
+pdam_00020344,15,Wounded 2h,Ppm1j: Protein phosphatase 1J (Rattus norvegicus)
+pdam_00020364,24,Wounded 2h,unknown function
+pdam_00020375,24,Wounded 2h,wdr1-b: WD repeat-containing protein 1-B (Xenopus laevis)
+pdam_00020423,21,Wounded 4h,ARID2: AT-rich interactive domain-containing protein 2 (Homo sapiens)
+pdam_00020442,22,Wounded 4h,PARP1: Poly [ADP-ribose] polymerase 1 (Gallus gallus)
+pdam_00020449,21,Wounded 4h,Banf1: Barrier-to-autointegration factor (Mus musculus)
+pdam_00020480,24,Wounded 2h,GFP-like fluorescent chromoprotein amFP486 (Anemonia manjano)
+pdam_00020539,24,Wounded 2h,unknown function
+pdam_00020550,15,Wounded 2h,unknown function
+pdam_00020559,22,Wounded 4h,unknown function
+pdam_00020574,24,Wounded 2h,Robo3: Roundabout homolog 3 (Mus musculus)
+pdam_00020588,22,Wounded 4h,trim71: E3 ubiquitin-protein ligase TRIM71 (Xenopus tropicalis)
+pdam_00020599,24,Wounded 2h,unknown function
+pdam_00020697,21,Wounded 4h,Tmprss6: Transmembrane protease serine 6 (Mus musculus)
+pdam_00020749,24,Wounded 2h,NDUFA13: NADH dehydrogenase [ubiquinone] 1 alpha subcomplex subunit 13 (Bos taurus)
+pdam_00020772,15,Wounded 2h,Pkd1l2: Polycystic kidney disease protein 1-like 2 (Mus musculus)
+pdam_00020798,22,Wounded 2h and Wounded 4h,MAD2L2: Mitotic spindle assembly checkpoint protein MAD2B (Bos taurus)
+pdam_00020885,22,Wounded 4h,CLIC1: Chloride intracellular channel protein 1 (Homo sapiens)
+pdam_00020926,21,Wounded 4h,RAB23: Ras-related protein Rab-23 (Homo sapiens)
+pdam_00020962,21,Wounded 4h,Proser1: Proline and serine-rich protein 1 (Mus musculus)
+pdam_00021033,22,Wounded 4h,unknown function
+pdam_00021257,24,Wounded 2h,APIP: Methylthioribulose-1-phosphate dehydratase (Gallus gallus)
+pdam_00021336,22,Wounded 4h,Stra6l: Stimulated by retinoic acid gene 6 protein-like (Mus musculus)
+pdam_00021366,15,Wounded 2h,CCDC28B: Coiled-coil domain-containing protein 28B (Homo sapiens)
+pdam_00021437,22,Wounded 4h,POLD3: DNA polymerase delta subunit 3 (Homo sapiens)
+pdam_00021503,21,Wounded 4h,Hlx: H2.0-like homeobox protein (Mus musculus)
+pdam_00021519,22,Wounded 4h,Adgrd1: Adhesion G-protein coupled receptor D1 (Mus musculus)
+pdam_00021552,22,Wounded 4h,unknown function
+pdam_00021666,22,Wounded 4h,ntmt1-b: N-terminal Xaa-Pro-Lys N-methyltransferase 1-B (Xenopus laevis)
+pdam_00021709,22,Wounded 4h,TTC28: Tetratricopeptide repeat protein 28 (Homo sapiens)
+pdam_00021773,21,Wounded 4h,unknown function
+pdam_00021997,21,Wounded 4h,ROBO1: Roundabout homolog 1 (Homo sapiens)
+pdam_00022018,21,Wounded 4h,F2: Prothrombin (Homo sapiens)
+pdam_00022054,22,Wounded 4h,Gamma-butyrobetaine dioxygenase (Pseudomonas sp. (strain AK-1))
+pdam_00022072,15,Wounded 2h,Pisd: Phosphatidylserine decarboxylase proenzyme%2C mitochondrial (Mus musculus)
+pdam_00022123,22,Wounded 4h,NTF2: Nuclear transport factor 2 (Saccharomyces cerevisiae (strain ATCC 204508 / S288c))
+pdam_00022146,15,Wounded 2h,ORC3: Origin recognition complex subunit 3 (Spermophilus citellus)
+pdam_00022158,22,Wounded 4h,Folh1: Glutamate carboxypeptidase 2 (Rattus norvegicus)
+pdam_00022159,22,Wounded 4h,Naalad2: N-acetylated-alpha-linked acidic dipeptidase 2 (Mus musculus)
+pdam_00022293,24,Wounded 2h,unknown function
+pdam_00022298,22,Wounded 4h,Snx6: Sorting nexin-6 (Mus musculus)
+pdam_00022448,22,Wounded 4h,CRCP: DNA-directed RNA polymerase III subunit RPC9 (Bos taurus)
+pdam_00022471,24,Wounded 1h and Wounded 2h,EIF2AK4: eIF-2-alpha kinase GCN2 (Homo sapiens)
+pdam_00022671,15,Wounded 2h,unknown function
+pdam_00022718,21,Wounded 4h,Hmcn2: Hemicentin-2 (Mus musculus)
+pdam_00022847,21,Wounded 4h,KLHDC3: Kelch domain-containing protein 3 (Bos taurus)
+pdam_00022908,22,Wounded 4h,cyp3a56: Cytochrome P450 3A56 (Fundulus heteroclitus)
+pdam_00022947,24,Wounded 2h,Uncharacterized skeletal organic matrix protein 5 (Acropora millepora)
+pdam_00023068,21,Wounded 4h,TTC28: Tetratricopeptide repeat protein 28 (Homo sapiens)
+pdam_00023084,24,Wounded 2h,BHMT: Betaine--homocysteine S-methyltransferase 1 (Pongo abelii)
+pdam_00023102,15,Wounded 2h,unknown function
+pdam_00023141,21,Wounded 4h,unknown function
+pdam_00023261,24,Wounded 2h,Cdc20: Cell division cycle protein 20 homolog (Mus musculus)
+pdam_00023485,21,Wounded 4h,unknown function
+pdam_00023653,21,Wounded 4h,unknown function
+pdam_00023715,24,Wounded 2h,ATF7IP: Activating transcription factor 7-interacting protein 1 (Gallus gallus)
+pdam_00023723,15,Wounded 2h,ppp1cb: Serine/threonine-protein phosphatase PP1-beta catalytic subunit (Xenopus tropicalis)
+pdam_00023798,22,Wounded 4h,Ddo: D-aspartate oxidase (Mus musculus)
+pdam_00023803,21,Wounded 4h,Uncharacterized skeletal organic matrix protein 5 (Acropora millepora)
+pdam_00023812,15,Wounded 2h,unknown function
+pdam_00023828,15,Wounded 4h,SENP8: Sentrin-specific protease 8 (Homo sapiens)
+pdam_00023838,24,Wounded 2h,INPP5F: Phosphatidylinositide phosphatase SAC2 (Homo sapiens)
+pdam_00023840,22,Wounded 4h,unknown function
+pdam_00023979,22,Wounded 4h,unknown function
+pdam_00024053,24,Wounded 2h,unknown function
+pdam_00024230,22,Wounded 4h,unknown function
+pdam_00024388,22,Wounded 4h,ADGRD1: Adhesion G-protein coupled receptor D1 (Bos taurus)
+pdam_00024495,21,Wounded 4h,COL1A2: Collagen alpha-2(I) chain (Fragment) (Oryctolagus cuniculus)
+pdam_00024503,21,Wounded 4h,unknown function
+pdam_00024567,15,Wounded 1h and Wounded 2h,unknown function
+pdam_00024639,22,Wounded 4h,TRAF4: TNF receptor-associated factor 4 (Homo sapiens)
+pdam_00024777,22,Wounded 4h,unknown function
+pdam_00024803,22,Wounded 4h,unknown function
+pdam_00024838,24,Wounded 2h and Wounded 4h,TTC28: Tetratricopeptide repeat protein 28 (Homo sapiens)
+pdam_00024855,24,Wounded 2h,unknown function
+pdam_00024941,22,Wounded 4h,TRAF6: TNF receptor-associated factor 6 (Macaca mulatta)
+pdam_00024958,22,Wounded 4h,GPSM2: G-protein-signaling modulator 2 (Homo sapiens)
+pdam_00025024,24,Wounded 2h,unknown function
+pdam_00025269,22,Wounded 4h,Ectin (Fragment) (Acropora millepora)
+pdam_00025487,15,Wounded 1h and Wounded 2h,unknown function
+pdam_00025503,22,Wounded 4h,unknown function
+pdam_00025545,15,Wounded 1h and Wounded 2h,RAB18: Ras-related protein Rab-18 (Gallus gallus)
+pdam_00025551,24,Wounded 2h,unknown function
+pdam_00025728,22,Wounded 2h and Wounded 4h,unknown function
+pdam_00025760,24,Wounded 2h,TTC28: Tetratricopeptide repeat protein 28 (Homo sapiens)
+pdam_00025815,22,Wounded 4h,unknown function
+pdam_00025854,24,Wounded 2h,unknown function
+pdam_00025879,24,Wounded 2h,unknown function
+pdam_00025999,15,Wounded 2h,unknown function
+pdam_00026011,22,Wounded 4h,unknown function
+pdam_00026034,15,Wounded 2h,unknown function

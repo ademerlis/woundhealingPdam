@@ -13,12 +13,76 @@ library(UpSetR)
 library(DESeq2)
 library(DEGreport)
 library(ComplexHeatmap)
+library(RColorBrewer)
 ```
 
 
 # Import DESeq2 object with group information
 ```{r}
 dds_group <- readRDS("rds_files/dds_group.rds")
+
+#reading in txt file as a table with the headers as the header in the original file
+countsmatrix <-read.table("../0_input_files/WH_Pdam_original.Rmatrix.txt",header=TRUE)
+
+#removing the Chromosome column from the dataset, and changing the rows to be the gene names
+countsmatrix <-countsmatrix %>% 
+  dplyr::select(-c("Chr", "Start", "End", "Strand", "Length")) %>% 
+  column_to_rownames("Geneid")
+
+#removing hour 5 from the dataset because it only has 1 wounded coral, so it is not comparable 
+countsmatrix <- countsmatrix %>% 
+  dplyr::select(!X5331C1:X5335Y)
+
+#function found from stack overflow
+#tidying column names so they don't include an X anymore (R puts an X in front of columns that start with numbers)
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(countsmatrix)
+
+metadata = data.frame(sample=colnames(countsmatrix),
+                condition = stringr::str_detect(pattern = ".*C.*",string = colnames(countsmatrix)),
+                hour = stringr::str_replace(pattern = "(.).*",replacement="\\1",string = colnames(countsmatrix)),
+ id = stringr::str_replace(pattern=".(...).*",replacement="\\1",string=colnames(countsmatrix)))
+
+#changing TRUE and FALSE for condition to Control and Wounded
+metadata$condition[str_detect(metadata$condition,"TRUE")] <- "Control"
+metadata$condition[str_detect(metadata$condition,"FALSE")] <- "Wounded"
+
+metadata <- metadata %>% column_to_rownames("sample")
+
+metadata$condition <- as.factor(metadata$condition)
+metadata$hour <- as.factor(metadata$hour)
+
+# creating grouping variable
+
+metadata$group <- factor(paste0(metadata$condition, "_", metadata$hour))
+metadata$group <- relevel(metadata$group, ref = "Control_0")
+
+genefeatures <- read.delim(file = "../0_input_files/pdam_genome_IDInfo.gff", header = F)
+head(genefeatures)
+colnames(genefeatures) <- c("IDGeneInfo")
+rownames(genefeatures) <- rownames(countsmatrix)
+
+#removing gene name from the second column
+gene_name_split <- str_split_fixed(genefeatures$IDGeneInfo, " ", 2)
+print(head(gene_name_split))
+colnames(gene_name_split)<- c("Gene_ID","Gene_Function")
+head(gene_name_split)
+gene_name_split_df<-data.frame(gene_name_split)
+head(gene_name_split_df)
+
+#convert the Gene_ID column to the row headers
+gene_name_split_df %>%
+     remove_rownames() %>%
+ column_to_rownames(var = 'Gene_ID')-> Pdam_Gene_Names_Info 
 ```
 
 # Principal component analyses and Scree plots
@@ -473,11 +537,126 @@ p2<-ggplot(cluster_summary, aes(x = factor(cluster), y = count, fill = intersect
 #ggsave("cluster_by_intersection.pdf", width = 10, height = 6)
 ```
 
+get list of genes in each cluster with their gene annotations
+```{r}
+cluster_genes_list <- clusters$df
+
+merge(as.data.frame(cluster_genes_list),Pdam_Gene_Names_Info,by='row.names',all=TRUE) %>% 
+  drop_na() %>% 
+  dplyr::rename(Gene = genes) %>%
+  dplyr::select(!Row.names) %>% 
+  write_csv("cluster_genes_annotated.csv")
+
+merge(as.data.frame(cluster_genes_list),Pdam_Gene_Names_Info,by='row.names',all=TRUE) %>% 
+  drop_na() %>% 
+  dplyr::rename(Gene = genes) %>%
+  dplyr::select(!Row.names) -> gene_cluster_annotations
+```
+
 
 ```{r}
 # Combine the two plots
 ggarrange(p1, p2, ncol = 1, labels = c("A", "B"), widths = c(1.5,1))
 ggsave("cluster_analysis_combined.pdf", width = 8, height = 10)
+```
+
+
+# Heatmap
+
+using injury-responsive genes (w0 vs w1,w2,w4, pre-filtered out controls)
+```{r}
+# Rank by variance across samples
+mat_all <- assay(rld)[all_injury_temporal, ]
+gene_vars <- apply(mat_all, 1, var)
+top_gene_names <- names(sort(gene_vars, decreasing = TRUE)[1:51])
+
+mat <- assay(rld)[top_gene_names, ]
+
+Pdam_Gene_Names_Info %>% 
+  rownames_to_column("gene_name") -> Pdam_Gene_Names_Info
+
+right_join(Pdam_Gene_Names_Info, top_gene_names %>% as.data.frame() %>% dplyr::rename(Gene = "."), by = c("gene_name" = "Gene")) -> gene_info
+
+gene_info %>% 
+  filter(Gene_Function != "unknown function") -> gene_info
+
+# Create labels - adjust column names as needed
+# Example formats:
+# Option 1: Gene Name (ID) - Description
+gene_labels <- paste0(gene_info$gene_name, ": ", gene_info$Gene_Function)
+
+mat[gene_info$gene_name, ] -> mat_filtered
+str(mat_filtered)
+
+rownames(mat) <- gene_labels
+
+# Center and scale by row for better visualization
+mat_scaled <- t(scale(t(mat_filtered)))
+
+col_annotation <- data.frame(
+  Condition = metadata$condition,  
+  Hour = factor(metadata$hour),    
+  row.names = colnames(mat)
+)
+
+# Define colors for annotations
+ann_colors <- list(
+  Condition = c(Wounded = "#E41A1C", Control = "#377EB8"),
+  Hour = brewer.pal(length(unique(metadata$hour)), "Set2")
+)
+names(ann_colors$Hour) <- levels(factor(metadata$hour))
+
+# Create the heatmap with custom clustering
+# Cluster columns by condition and hour
+pheatmap(
+  mat_scaled,
+  annotation_col = col_annotation,
+  annotation_colors = ann_colors,
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  clustering_distance_cols = "euclidean",
+  clustering_method = "complete",
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  fontsize_row = 8,
+  fontsize_col = 8,
+  main = "Top 20 DEGs: Wounded vs Control",
+  color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdBu")))(100),
+  breaks = seq(-2, 2, length.out = 101)
+)
+
+# Optional: If you want to force clustering by condition first, then hour
+# Create a custom clustering based on your metadata
+col_order <- order(metadata$hour, metadata$condition)
+mat_ordered <- mat_scaled[, col_order]
+col_annotation_ordered <- col_annotation[col_order, ]
+
+n_genes <- nrow(mat_scaled_ordered)
+
+plot_width <- 20  # Fixed large width
+plot_height <- 4 + (n_genes * 0.08)  # Scale height by number of genes
+
+# Set up plotting area with custom margins (bottom, left, top, right)
+
+pdf("heatmap_injury_degs.pdf", width = plot_width, height = plot_height)
+pheatmap(
+  mat_scaled_ordered,
+  annotation_col = col_annotation_ordered,
+  annotation_colors = ann_colors,
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  clustering_distance_rows = "euclidean",
+  clustering_method = "complete",
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  fontsize_row = 10,
+  fontsize_col = 10,
+  color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdBu")))(100),
+  breaks = seq(-2, 2, length.out = 101),
+  cellwidth = 12,
+  cellheight = 8
+)
+dev.off()
 ```
 
 

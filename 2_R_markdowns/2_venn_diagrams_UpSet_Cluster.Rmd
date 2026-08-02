@@ -459,11 +459,19 @@ table(clusters$df$cluster)
 # Create custom plot
 cluster_data <- clusters$normalized
 
+cluster_data %>% 
+  mutate(cluster = case_when(
+    cluster == 15 ~ "Cluster 1",
+    cluster == 21 ~ "Cluster 2",
+    cluster == 22 ~ "Cluster 3",
+    cluster == 24 ~ "Cluster 4"
+  )) -> cluster_data
+
 # Custom plot
 p1<-ggplot(cluster_data, aes(x = hour, y = value, color = condition, group = genes)) +
   geom_point(alpha = 0.1) +
   stat_summary(aes(group = condition), fun = mean, geom = "line", size = 1) +
-  facet_wrap(~ cluster, scales = "free_y", labeller = labeller(cluster = function(x) paste("Gene Cluster:", x))) +
+  facet_wrap(~ cluster, scales = "free_y") +
   scale_color_manual(values = c("Control" = "steelblue", 
                                 "Wounded" = "red3")) +
   labs(x = "Hour", y = "Z-Score of Gene Abundance", 
@@ -535,6 +543,38 @@ p2<-ggplot(cluster_summary, aes(x = factor(cluster), y = count, fill = intersect
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #ggsave("cluster_by_intersection.pdf", width = 10, height = 6)
+
+
+# heatmap
+clusters_df <-clusters$df
+clusters_df %>% 
+  mutate(cluster = case_when(
+    cluster == 15 ~ "Cluster 1",
+    cluster == 21 ~ "Cluster 2",
+    cluster == 22 ~ "Cluster 3",
+    cluster == 24 ~ "Cluster 4"
+  )) -> clusters_df
+
+comp <- clusters_df %>%
+  mutate(cluster = factor(cluster),
+         intersection_group = factor(intersection_group)) %>%
+  dplyr::count(cluster, intersection_group, name = "n") %>%
+  complete(cluster, intersection_group, fill = list(n = 0))
+
+p_heat <- ggplot(comp, aes(x = intersection_group, y = fct_rev(cluster), fill = n)) +
+  geom_tile(color = "white", linewidth = 0.9) +
+  geom_text(aes(label = n, color = n > max(n) * 0.6),
+            size = 3.4, fontface = "bold", show.legend = FALSE) +
+  scale_color_manual(values = c(`TRUE` = "white", `FALSE` = "grey15")) +
+  scale_fill_gradient(low = "#EAF1F8", high = "#2C5C8A", name = "Genes") +
+  labs(x = "Injury-response group (shared timepoint contrasts)", y = NULL,
+       title = "Gene composition of each temporal cluster") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid   = element_blank(),
+        axis.ticks   = element_blank(),
+        axis.text.x  = element_text(angle = 30, hjust = 1),
+        plot.title   = element_text(size = 11, face = "plain"),
+        legend.position = "right")
 ```
 
 get list of genes in each cluster with their gene annotations
@@ -556,12 +596,12 @@ merge(as.data.frame(cluster_genes_list),Pdam_Gene_Names_Info,by='row.names',all=
 
 ```{r}
 # Combine the two plots
-ggarrange(p1, p2, ncol = 1, labels = c("A", "B"), widths = c(1.5,1))
-ggsave("cluster_analysis_combined.pdf", width = 8, height = 10)
+ggarrange(p1, p_heat, ncol = 1, labels = c("A", "B"), widths = c(1.5,1))
+ggsave("cluster_analysis_combined.png", width = 8, height = 10)
 ```
 
 
-# Heatmap
+# DEG Heatmap
 
 using injury-responsive genes (w0 vs w1,w2,w4, pre-filtered out controls)
 ```{r}
@@ -588,7 +628,7 @@ gene_labels <- paste0(gene_info$gene_name, ": ", gene_info$Gene_Function)
 mat[gene_info$gene_name, ] -> mat_filtered
 str(mat_filtered)
 
-rownames(mat) <- gene_labels
+rownames(mat_filtered) <- gene_labels
 
 # Center and scale by row for better visualization
 mat_scaled <- t(scale(t(mat_filtered)))
@@ -631,16 +671,18 @@ col_order <- order(metadata$hour, metadata$condition)
 mat_ordered <- mat_scaled[, col_order]
 col_annotation_ordered <- col_annotation[col_order, ]
 
-n_genes <- nrow(mat_scaled_ordered)
+n_genes <- nrow(mat_ordered)
 
 plot_width <- 20  # Fixed large width
 plot_height <- 4 + (n_genes * 0.08)  # Scale height by number of genes
 
 # Set up plotting area with custom margins (bottom, left, top, right)
+library(ComplexHeatmap)
 
-pdf("heatmap_injury_degs.pdf", width = plot_width, height = plot_height)
-pheatmap(
-  mat_scaled_ordered,
+pdf("heatmap_injury_degs_hour_condition.pdf", width = plot_width, height = plot_height)
+# 1. Generate the heatmap but save it as an object without plotting it immediately
+ph<-pheatmap(
+  mat_ordered,
   annotation_col = col_annotation_ordered,
   annotation_colors = ann_colors,
   cluster_rows = TRUE,
@@ -656,6 +698,9 @@ pheatmap(
   cellwidth = 12,
   cellheight = 8
 )
+
+# 2. Draw the heatmap and specify the legend position ("bottom", "top", "left", or "right")
+draw(ph, heatmap_legend_side = "top", annotation_legend_side = "top")
 dev.off()
 ```
 

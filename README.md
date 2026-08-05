@@ -1,5 +1,4 @@
-[Zenodo Link]
-[Sequencing Data on NCBI SRA under BioProject XXX]
+Sequencing Data on NCBI SRA under BioProject PRJNA1398920
 
 This repository contains data and analysis scripts for the manuscript:
 
